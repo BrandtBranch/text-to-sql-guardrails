@@ -4,7 +4,7 @@ Claude answers plain-English questions about a database by writing SQL. This rep
 
 It has a layered guardrail stack, a 53-attack suite that runs without any model, a red team that sends hostile questions through Claude under four prompt-and-guardrail configurations, and a privacy rule for salary statistics together with the attack that breaks it and the layer that stops that attack. A differential fuzzer then tries 40,000 variations of those queries looking for a way through. 120 tests run offline.
 
-**See it work:** [`docs/guardrails-explained.html`](docs/guardrails-explained.html) is an interactive page. Pick an attack, switch each layer on and off, and watch what stops it. Every outcome on it comes from running the real code on the real database. Download the file and open it in a browser, since GitHub shows only its source.
+**Try it live:** [brandtbranch.github.io/text-to-sql-guardrails](https://brandtbranch.github.io/text-to-sql-guardrails/) is an interactive page. Pick an attack, switch each layer on and off, and watch what stops it. Every outcome on it comes from running the real code on the real database. The file is [`docs/guardrails-explained.html`](docs/guardrails-explained.html).
 
 ## What I found
 
@@ -143,7 +143,7 @@ src/sqlguard/
   redteam.py     the 27 scenarios, harm scoring and replay re-scoring
   claude_code.py runs the model through a Claude Code login, no key
   cli.py
-docs/            guardrails-explained.html, the interactive page
+docs/            guardrails-explained.html, the interactive page, and index.html, which forwards the site's address to it
 scripts/         build_guardrails_page.py rebuilds that page from the real guardrail code
 tests/           120 offline tests
 results/         saved output of each run
