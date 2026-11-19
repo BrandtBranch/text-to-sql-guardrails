@@ -18,6 +18,7 @@ from sqlglot.errors import SqlglotError
 from .db import BUSINESS_TABLES
 
 DEFAULT_DENIED_FUNCTIONS = frozenset({"load_extension", "readfile", "writefile", "edit", "fts3_tokenizer", "zeroblob", "randomblob"})
+_COMMENT_ONLY = tuple(getattr(exp, n) for n in ("Semicolon",) if hasattr(exp, n)) or (type(None),)
 _WRITE_NODES = tuple(getattr(exp, n) for n in ("Insert", "Update", "Delete", "Drop", "Create", "Alter", "Command", "Pragma", "Attach", "Detach", "Merge") if hasattr(exp, n))
 
 
@@ -136,7 +137,8 @@ def validate(sql: str, policy: Policy) -> Validated:
     if len(sql) > policy.max_sql_chars:
         raise GuardViolation("too_long", f"the query is longer than {policy.max_sql_chars} characters")
     try:
-        statements = [s for s in sqlglot.parse(sql, read="sqlite") if s is not None]
+        # A trailing comment parses as a comment-only "statement". It carries no query, and comments are dropped from what is executed.
+        statements = [s for s in sqlglot.parse(sql, read="sqlite") if s is not None and not isinstance(s, _COMMENT_ONLY)]
     except SqlglotError as exc:
         raise GuardViolation("unparseable", f"the query could not be parsed: {str(exc)[:120]}") from exc
     if len(statements) != 1:

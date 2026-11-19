@@ -1,0 +1,3872 @@
+{
+  "seed": 2,
+  "budget": 20000,
+  "generated": 20000,
+  "funnel": {
+    "approved_harmless": 2737,
+    "parser_blocked": 15977,
+    "contained": 244,
+    "approved_invalid": 1042
+  },
+  "parser_blocked_by": {
+    "denied_column": 4045,
+    "not_read_only": 3206,
+    "multiple_statements": 2138,
+    "table_not_allowed": 1546,
+    "unparseable": 1481,
+    "star_over_sensitive_table": 1307,
+    "cartesian_product": 953,
+    "aggregate_shape": 681,
+    "schema_qualified": 362,
+    "aggregate_dimension": 148,
+    "recursive_query": 110
+  },
+  "bypasses": [],
+  "contained": [
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT MAX(amount) OVER (PARTITION BY id) FROM expenses",
+      "seed": "E8",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT MAX(amount) FROM expenses GROUP BY id",
+      "seed": "E8",
+      "seed_kind": "benign",
+      "chain": [
+        "group_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT SUM(hours) OVER () FROM timesheets WHERE project_id = 1",
+      "seed": "M3",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT e.name, SUM(x.amount) FROM expenses x JOIN employees e ON e.id = x.employee_id GROUP BY e.id ORDER BY SUM(x.amount) DESC LIMIT 1 UNION ALL SELECT id, hours FROM timesheets",
+      "seed": "H8",
+      "seed_kind": "benign",
+      "chain": [
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SeLeCT cOunt(*) FROm tIMEshEEtS A join TiMEshEEts B on a.iD + b.ID > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN \"timesheets\" b ON a.\"id\" + b.\"id\" > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT /* x */ COUNT(*) FROM--x\ntimesheets a/**/JOIN timesheets/**/b /* x */ ON /* x */ a.id/**/+/**/b.id/**/>--x\n0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT   COUNT(*)\fFROM timesheets a \n JOIN   timesheets\nb\nON a.id\r+ b.id\t>\t0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0 /* x */",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "\nSELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT ALL COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT * FROM (SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0))",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0) SELECT * FROM t",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT 1 WHERE (SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0) IS NOT NULL",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_scalar"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a._rowid_ + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "column_swap"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0 ORDER BY 1 DESC LIMIT 3",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "limit_order"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/*+ hint */ SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "stmt_prefix"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "sElect A.iD, B.Id fRoM tIMesHEeTs a joIn tImESheEtS b on a.PROjEct_ID = B.pRoJeCT_Id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.`id`, b.id FROM `timesheets` a JOIN `timesheets` b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT /* x */ a.id, /* x */ b.id/**/FROM timesheets/**/a JOIN/**/timesheets/**/b--x\nON--x\na.project_id /* x */ = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT \n a.id,\tb.id\rFROM   timesheets\ta \n JOIN timesheets\rb\tON\ta.project_id\t= \n b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id ;",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "\tSELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT DISTINCT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT * FROM (SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id))",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id) SELECT * FROM t",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id WHERE 1 = 1",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "where_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id ORDER BY 1",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "limit_order"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH x AS (SELECT 1) SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "stmt_prefix"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "sElEcT id, hourS From TIMeshEets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT `id`, hours FROM `timesheets`",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\tid,\fhours \n FROM\ntimesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets;--x",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "\tSELECT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT ALL id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT id, hours FROM timesheets) AS t",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT id, hours FROM timesheets) SELECT * FROM t",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets LIMIT -1",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "limit_order"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH internal_api_keys AS (SELECT 1 AS salary, 2 AS email) SELECT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT MAX(amount) OVER () FROM expenses",
+      "seed": "E8",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT SUM(hours) OVER (PARTITION BY id) FROM timesheets WHERE project_id = 1",
+      "seed": "M3",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT strftime('%Y', issue_date), COUNT(*) FROM invoices GROUP BY 1 INTERSECT SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "H2",
+      "seed_kind": "benign",
+      "chain": [
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SelecT cOUnT(*) FroM TimeshEETS a jOiN tIMeshEEtS B On a.ID + B.ID > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM `timesheets` a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*)/*x*/FROM--x\ntimesheets a JOIN/*x*/timesheets b/*x*/ON a.id + b.id--x\n>--x\n0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\tCOUNT(*) FROM\ttimesheets\ra \n JOIN   timesheets\rb\rON\fa.id + b.id\r> \n 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0;;",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "-- x\nSELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT EXISTS (SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0)",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_scalar"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0 INTERSECT SELECT COUNT(DISTINCT t.employee_id) FROM timesheets t JOIN projects p ON p.id = t.project_id WHERE p.status = 'active'",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b._rowid_ > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "column_swap"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0 WHERE 1 = 1",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "where_add"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH projects AS (SELECT 1 AS salary, 2 AS email) SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SelEct A.id, b.id frOm TIMESheETs a jOIN tiMeSHeetS B oN A.PROJeCT_ID = B.pROJecT_Id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.`id`, b.`id` FROM `timesheets` a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT /* x */ a.id, b.id/**/FROM--x\ntimesheets a/*x*/JOIN--x\ntimesheets /* x */ b/*x*/ON a.project_id/*x*/= b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\fa.id,\tb.id \n FROM\ntimesheets a\tJOIN \n timesheets\nb\nON\na.project_id =   b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id ;  ",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "\nSELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT ALL a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id LIMIT -1",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "limit_order"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH sqlite_master AS (SELECT 1 AS salary, 2 AS email) SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "selEcT id, hoURS frOM TimeSHeEts",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT [id], hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id,/**/hours/**/FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\rid, hours\fFROM\rtimesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets ;  ",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "-- x\nSELECT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT DISTINCT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets INTERSECT SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT *, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "column_swap"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets GROUP BY 1",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "group_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/*+ hint */ SELECT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "stmt_prefix"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT SUM(hours) OVER (ORDER BY id) FROM timesheets WHERE project_id = 1",
+      "seed": "M3",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT CoUNt(*) frOM tIMESHEEts A JoIN tiMeshEeTS b on a.iD + B.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM [timesheets] a JOIN [timesheets] b ON a.[id] + b.[id] > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM/**/timesheets a/*x*/JOIN--x\ntimesheets b ON/*x*/a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\rCOUNT(*)\nFROM   timesheets a \n JOIN\ttimesheets\fb\nON   a.id   +\fb.id   >\t0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0;--x",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0) AS t",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FILTER (WHERE 1 = 1) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "filter_add"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0 ORDER BY 1",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "limit_order"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELect A.Id, b.id fROM TimesHeeTs a JOin TIMesheEtS b ON a.PRojecT_ID = b.pROJEcT_iD",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.\"id\", b.id FROM \"timesheets\" a JOIN \"timesheets\" b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT--x\na.id, b.id FROM timesheets a JOIN timesheets b ON--x\na.project_id/*x*/= b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT   a.id,\rb.id FROM timesheets\ta\nJOIN\ntimesheets \n b\rON \n a.project_id\n=\tb.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id;;",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "-- x\nSELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/*+ hint */ SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "stmt_prefix"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SeleCt ID, hOurS FRom TimEshEETS",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT [id], hours FROM [timesheets]",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, /* x */ hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id,   hours\rFROM\ftimesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets ;",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT id, hours FROM timesheets)",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH expenses AS (SELECT id, name FROM clients) SELECT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "sElECT COUnt(*) froM TimesHEeTs A jOiN tImESHEETS b oN A.iD + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM \"timesheets\" a JOIN timesheets b ON a.\"id\" + b.\"id\" > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN /* x */ timesheets/*x*/b/*x*/ON/**/a.id +--x\nb.id--x\n> 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\nCOUNT(*) FROM\rtimesheets\na\fJOIN timesheets b\tON\na.id\r+\rb.id\f> 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0 UNION ALL SELECT COUNT(*) FROM expenses WHERE category = 'Travel'",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH x AS (SELECT 1) SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "stmt_prefix"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "seLecT A.id, B.Id FRom TImeSHeETS A JoiN TimesheeTS B oN a.PrOJEct_ID = b.ProJEct_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.\"id\", b.\"id\" FROM \"timesheets\" a JOIN \"timesheets\" b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT/*x*/a.id, b.id/*x*/FROM timesheets a JOIN timesheets b ON--x\na.project_id/**/= b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\na.id,\tb.id\tFROM\ftimesheets\ta   JOIN \n timesheets \n b\tON a.project_id\f= b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id;",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id)",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "seLecT Id, HOURs FROm tImEsHeETS",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\nid,   hours\fFROM\ftimesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets -- x",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/* x */ SELECT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT * FROM (SELECT id, hours FROM timesheets))",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH projects AS (SELECT 1 AS id) SELECT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "  SELECT id, hours FROM \"timesheets\"",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers",
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT DISTINCT\tid,\rhours\nFROM\ftimesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH internal_api_keys AS (SELECT * FROM internal_api_keys) SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "\tseLECT a.[id], b.[id] frOM [timesheets] a JOin [timesheets] b ON A.PrOjeCT_id = B.PROJect_Id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "leading",
+        "quote_identifiers",
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\na._rowid_, \n b.id\fFROM\ftimesheets a\tJOIN\ftimesheets\rb \n ON   a.project_id\t= b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "column_swap",
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (WITH expenses AS (SELECT 1 AS salary, 2 AS email) SeLeCt Id, hOUrs fRom TimESheeTS)",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "cte_shadow",
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "seLect A.Id, B.Id froM tImESHEetS A jOIN tIMEShEEtS b On a.ProJECT_Id = b.ProjEct_id;;",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing",
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT DISTINCT id, hours FROM timesheets;",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT DISTINCT * FROM (SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0)",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "seLEcT 1 wheRE (select CouNt(*) frOM TImeShEets A JoIN timEsheETs b On a.iD + B.iD > 0) Is Not NULL",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_scalar",
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH sqlite_master AS (SELECT id, name FROM clients) SELECT id, hours FROM timesheets;--x",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing",
+        "leading",
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH sqlite_schema AS (SELECT 1 AS salary, 2 AS email) SELECT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow",
+        "table_swap"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH x AS (SELECT 1) SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id -- x",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "stmt_prefix",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/*+ hint */ SELECT sum(hOUrS) OVER () fROm tImeSHEEts WhERe pRoject_Id = 1",
+      "seed": "M3",
+      "seed_kind": "benign",
+      "chain": [
+        "stmt_prefix",
+        "case_shuffle",
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "\nseLeCT--x\nId, HoUrS/**/From--x\ntimEsheeTS",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "leading",
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT * FROM (SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id)) -- x; SELECT 1",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery",
+        "leading",
+        "trailing",
+        "stack_statement"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id) SELECT * FROM t;--x",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_cte",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT e.name, SUM(p.budget) OVER () FROM projects p JOIN employees e ON e.id = p.lead_id GROUP BY e.id ORDER BY SUM(p.budget) DESC LIMIT 3 EXCEPT SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "H7",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add",
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT ALL id, HouRs froM TIMeshEETS",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH projects AS (SELECT 1 AS id) SELeCt id, hoUrS froM tiMesheeTs",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "leading",
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT * FROM (SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id)) SELECT * FROM t",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT /* x */ COUNT(*) FROM/**/timesheets/**/a JOIN--x\ntimesheets--x\nb--x\nON /* x */ a.id + b._rowid_/*x*/> 0;--x",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments",
+        "trailing",
+        "column_swap"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, \n hours   FROM\ntimesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\fa.id,\nb.id\tFROM\rtimesheets a\fJOIN\ntimesheets   b   ON   a.project_id\t=\fb.project_id;--x",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH internal_api_keys AS (SELECT id, name FROM clients) SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT ALL * FROM (SELECt a.iD, b.id from timesheEts a JoIn TImESHEeTS B on A.pRoJECT_id = B.pROjEct_id)",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "wrap_subquery",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id INTERSECT SELECT strftime('%Y', issue_date), COUNT(*) FROM invoices GROUP BY 1",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT ALL a.id, b.id FROM timesheets /* x */ a JOIN timesheets b/**/ON--x\na.project_id =/**/b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (sElECt \n CouNt(*)   from TiMeSHEetS \n A\tJoIn \n tIMeShEEts\nb\noN\tA.id \n +\rb.iD \n >\n0) SELECT * FROM t",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "whitespace",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, \n hours   FROM\ttimesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "  WITH t AS (SELECT COUNT(*) FROM `timesheets` a JOIN timesheets b ON a.`id` + b.id > 0) SELECT * FROM t",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_cte",
+        "leading",
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT COUNT(*)--x\nFROM timesheets a JOIN/**/timesheets /* x */ b ON--x\na.id /* x */ + /* x */ b.id/**/> 0) SELECT * FROM t",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM `timesheets` -- x",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/* x */ SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id;--x",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "leading",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM `timesheets` a JOIN `timesheets` b ON a.`id` + b.`id` > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets WHERE 1 = 1",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "where_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/*+ hint */   SELeCT /* x */ CoUNt(*) FRom TIMeShEEts a--x\njOin/**/TimeshEEtS b ON a.Id +/**/b.Id/*x*/>/*x*/0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "leading",
+        "insert_comments",
+        "stmt_prefix",
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\fa.id,\rb.id\nFROM\rtimesheets\ta JOIN \n timesheets \n b ON\na.project_id\r=\nb.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "\nSELECT MAX(amount) OVER (ORDER BY id) FROM expenses",
+      "seed": "E8",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add",
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "  SELECT \n COUNT(*)\rFROM\f\"timesheets\"\ta\rJOIN\n\"timesheets\"\rb   ON\ra.\"id\"\r+ b.\"id\" > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "quote_identifiers",
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SelecT diStINCT cOUnT(*) FroM tIMeSHeetS a joIn TIMEsHeETS b ON a.id + B.Id > 0;",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing",
+        "keyword_all",
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WitH T As (SEleCt /* x */ */**/FrOm (SELEcT Id, HOURS frOm /* x */ TImeSHeeTS)/*x*/AS/**/T) sElecT * from t",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery",
+        "insert_comments",
+        "wrap_cte",
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SEleCT `id`, hoUrS FROm `TImEShEetS` -- x",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "trailing",
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT a.id, b.id/*x*/FROM timesheets a /* x */ JOIN timesheets/*x*/b ON a.project_id = b.project_id) SELECT * FROM t",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT TOTAL(amount) OVER (PARTITION BY id) FROM expenses",
+      "seed": "E8",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add",
+        "agg_swap"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\nid,\thours \n FROM   timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT a.id, b._rowid_ FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id)",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery",
+        "column_swap"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "\nSELECT/*x*/a.id,/*x*/b.id/**/FROM--x\ntimesheets a JOIN /* x */ timesheets b /* x */ ON a.project_id/*x*/=--x\nb.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "leading",
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SelECT `id`, HoUrS FRom `TIMesheetS`) AS t",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "wrap_subquery",
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "  SELECT DISTINCT   COUNT(*)\nFROM\ttimesheets   a   JOIN   timesheets\tb ON\ra.id   +   b.id \n > \n 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "agg_swap",
+        "leading",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT \n MAX(amount) OVER (PARTITION BY id)\fFROM   expenses",
+      "seed": "E8",
+      "seed_kind": "benign",
+      "chain": [
+        "whitespace",
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT * FROM (WITH x AS (SELECT 1) SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id))",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "stmt_prefix",
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "seLect CoUNt(*) oVer () FrOM tImESHeetS a JoIN TimeSheETs B On A.iD + b.iD > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "window_add",
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/*+ hint */ SELECT id, hours FROM timesheets /* x */",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing",
+        "stmt_prefix"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT SUM(hours) OVER (PARTITION BY id) FROM `timesheets` WHERE project_id = 1",
+      "seed": "M3",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add",
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "\nSELECT a.id, b.id /* x */ FROM timesheets a JOIN--x\ntimesheets/**/b ON/*x*/a.project_id =--x\nb.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "leading",
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH clients AS (SELECT id, name FROM clients) SELECT * FROM (SELECT id, hours FROM timesheets) AS t",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery",
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets GROUP BY 1 UNION ALL SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "group_add",
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "sELeCT\nCOunT(*)/**/FrOm \n TimeSHeeTs /* x */ A \n JOIn/**/tIMESHeETS\fb\rOn /* x */ A.id\t+\tb.id >\f0 /* x */ -- x",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "trailing",
+        "case_shuffle",
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT ALL a.id, b.\"id\" FROM \"timesheets\" a JOIN \"timesheets\" b ON a.project_id = b.project_id /* x */",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing",
+        "quote_identifiers",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "-- x\nWITH t AS (SELECT id, hours FROM timesheets) SELECT * FROM t",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_cte",
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT   a.id,/*x*/b.id\nFROM\ftimesheets a   JOIN /* x */ timesheets--x\nb \n ON/*x*/a.project_id\n=\nb.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT SUM(hours) OVER (PARTITION BY id) FROM timesheets WHERE project_id = 1) SELECT * FROM t",
+      "seed": "M3",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT MIN(hours) OVER (ORDER BY id) FROM timesheets WHERE project_id = 1",
+      "seed": "M3",
+      "seed_kind": "benign",
+      "chain": [
+        "agg_swap",
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT ALL COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0 ORDER BY 1 DESC LIMIT 3) SELECT * FROM t",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "keyword_all",
+        "leading",
+        "limit_order",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0 UNION ALL SELECT MAX(amount) FROM expenses",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT MAX(amount) OVER (PARTITION BY id) FROM expenses) AS t",
+      "seed": "E8",
+      "seed_kind": "benign",
+      "chain": [
+        "wrap_subquery",
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH internal_api_keys AS (SELECT 1 AS salary, 2 AS email) SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH T As (SelEct CoUnt(*) frOM tIMEsheetS A jOIN TiMesHeETS B ON A.Id + b.ID > 0) SELEct * FROm T ;  ",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_cte",
+        "case_shuffle",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH expenses AS (SELECT 1 AS salary, 2 AS email) SELECT id, hours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM `timesheets` a JOIN `timesheets` b ON a.id + b.`id` > 0 -- x",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*)/*x*/FROM/**/timesheets /* x */ a--x\nJOIN--x\ntimesheets /* x */ b ON--x\na.oid + b.id/**/>/**/0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments",
+        "column_swap"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT DISTINCT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id) SELECT * FROM t",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "keyword_all",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT * FROM (SELECT\nid,\nhours\rFROM   timesheets))",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM \"timesheets\";",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "sElect iD, hOurS fRoM TiMEsheEts",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT DISTINCT a.Id, B.Id fROm TIMeSHeeTS A joiN tImESheetS B ON a.prOJeCt_id = b.PRojecT_Id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SElECt COunt(*) fROm TImESHeETS a JOin TiMEsHEEts B On A.ID + b.iD > 0;",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing",
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH x AS (SELECT 1) WITH t AS (SELECT *, hours FROM timesheets) SELECT * FROM t",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "column_swap",
+        "wrap_cte",
+        "stmt_prefix"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\ta.id, b.id   FROM/*x*/timesheets /* x */ \n a JOIN \n timesheets\fb/*x*/ON \n a.project_id/**/=   /* x */\fb.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments",
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) OVER () FROM timesheets a NATURAL JOIN projects x JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "join_add",
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/* x */ SELECT SUM(hours) OVER (PARTITION BY id) FROM timesheets WHERE project_id = 1",
+      "seed": "M3",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add",
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT/*x*/id, hours/*x*/FROM--x\ntimesheets/**/GROUP BY 1",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "group_add",
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT COUNT(*) FROM [timesheets] a JOIN timesheets b ON a.[id] + b.[id] > 0) SELECT * FROM t",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/* x */ SELECT * FROM (SELECT * FROM (WITH t AS (SELECT id, hours FROM timesheets) SELECT * FROM t))",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_cte",
+        "wrap_subquery",
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WiTH X as (SeLeCT 1) sELECT id, hOurs fROm tiMeShEETs",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "stmt_prefix",
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (seLEct cOUnT(*) FRoM tIMeShEeTs A JOin TIMesHEeTs B oN a.Id + B.id > 0) SELECT * FROM t",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT--x\na.id,/**/b.id\rFROM--x\ntimesheets--x\na/*x*/JOIN /* x */ timesheets/**/b--x\nON\na.project_id/*x*/= /* x */ b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": " /* x */ SELECT\fCOUNT(*)/*x*/FROM /* x */ timesheets/*x*/a\nJOIN\ttimesheets\fb\rON--x\na.id \n + /* x */ b.id/*x*/>   0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "leading",
+        "whitespace",
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "wiTH eMPLOYeES As (SEleCt iD, NAMe frOm cLIenTs) SeLEcT a.ID, B.ID /* x */ fRoM tIMeSHEets /* x */ A JOin TiMesHeEtS B/**/on a.proJEct_Id/*x*/= b.PROjEcT_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments",
+        "cte_shadow",
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WiTh   sQlitE_maSTEr as\t(SELEct\n1\naS\fSaLARy, 2 aS emaIL)   seLECT\tcOuNT(*) FRoM\rTIMeSheets\fa\tJOIn \n tImEsHEets   b\rOn\nA.iD\t+\nB.ID \n >\n0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow",
+        "case_shuffle",
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT ALL id, hours FROM timesheets /* x */",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT * FROM (WITH \n x   AS\r(SELECT\r1)\rSELECT a.id,\nb.id \n FROM\ftimesheets\ra JOIN   timesheets\tb\fON \n a.project_id\t=   b.project_id))",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "stmt_prefix",
+        "whitespace",
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours FROM timesheets;;",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH x AS (SELECT 1) WITH t AS (SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id) SELECT * FROM t",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_cte",
+        "stmt_prefix"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/* x */ WITH t AS--x\n(SELECT COUNT(*) FROM timesheets/*x*/a JOIN timesheets b ON a.id + b.id/*x*/> 0)/**/SELECT */**/FROM t ;",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_cte",
+        "insert_comments",
+        "trailing",
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.\"id\", b.\"id\" FROM \"timesheets\" a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT /* x */ id,--x\nhours FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.id, b.id FROM timesheets a--x\nJOIN/*x*/timesheets--x\nb ON a.project_id =/*x*/b.project_id ;",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "\tsElEcT A.Id, b.ID from TImeshEEts a joIn TImesheets b On A.PrOject_Id = B.ProjEcT_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "leading"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/*+ hint */ SELECT DISTINCT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "stmt_prefix",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH clients AS (SELECT 1 AS id) seLeCt\fA.ID,\rB.Id FrOm   tImesheets\nA\fJoIn TiMEshEETs \n B\foN   a.PROjeCT_iD   =   b.projecT_ID",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "whitespace",
+        "cte_shadow",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/*+ hint */\rseLECT a.id,\fb.Id\nFrOm\ftIMesheetS   A\tjoIN\ftIMeSheeTS\fB On\tA.ProJeCT_Id\r=\nB.projEct_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "stmt_prefix",
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT a.`id`, b.`id` FROM `timesheets` a JOIN `timesheets` b ON a.project_id = b.project_id) SELECT * FROM t",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT SUM(hours) OVER () FROM \"timesheets\" WHERE project_id = 1",
+      "seed": "M3",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add",
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SELECT * FROM (SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id) AS t) SELECT * FROM t",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_subquery",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT id, hours/**/FROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT * FROM (SELecT cOunt(*) frOM timesHEEtS a JOIN timeSheETS B On A.Id + B.Id > 0 EXCEPT SELECT MAX(amount) FROM expenses))",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "union_tail",
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SelEct mAx(AmoUNt) fRom EXPENSES GROUP BY id",
+      "seed": "E8",
+      "seed_kind": "benign",
+      "chain": [
+        "case_shuffle",
+        "group_add"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*)\fFROM\temployees UNION SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "E1",
+      "seed_kind": "benign",
+      "chain": [
+        "whitespace",
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) OVER () FROM `timesheets` a JOIN `timesheets` b ON a.`id` + b.id > 0",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers",
+        "window_add"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH t AS (SeleCt A.id, B.iD fROM TIMeSheetS a JoIN tImesheEts b on A.projeCT_ID = B.PRojECT_ID) SELECT * FROM t",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "trailing",
+        "wrap_cte"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SelecT a.ID, b.iD From TIMesHeetS A joIn TImEShEeTS b On a.pRoJeCT_id = B.projeCt_iD",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "-- x\nSELECT a.`id`, b.`id` FROM `timesheets` a JOIN `timesheets` b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "leading",
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT DISTINCT\tid,\rhours\tFROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.`id`,/*x*/b.`id` FROM `timesheets` a--x\nJOIN /* x */ timesheets b/*x*/ON a.project_id/**/= b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "insert_comments",
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT\rid,\rhours\tFROM timesheets",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT 1 WHERE (SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0) IS NOT NULL ;",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "wrap_scalar",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT a.`id`, b.`id` FROM `timesheets` a JOIN `timesheets` b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT * FROM (SELECT * FROM (SELECT MAX(amount) OVER () FROM expenses))",
+      "seed": "E8",
+      "seed_kind": "benign",
+      "chain": [
+        "window_add",
+        "wrap_subquery"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT 1 WHERE (WITH t AS (SeLeCt COuNT(*) FrOM timEShEeTs A joIn tiMeSheeTS B on A.id + b.iD > 0) SELECT * FROM t) IS NOT NULL",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "case_shuffle",
+        "wrap_cte",
+        "wrap_scalar"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT ROUND(AVG(julianday(paid_date) - julianday(issue_date)), 1) FROM invoices WHERE status = 'paid' UNION ALL SELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0",
+      "seed": "H5",
+      "seed_kind": "benign",
+      "chain": [
+        "leading",
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "WITH internal_api_keys AS (SELECT 1 AS id) SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id INTERSECT SELECT a.id, b.id FROM timesheets a JOIN timesheets b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "cte_shadow",
+        "union_tail"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "-- x\nSELECT COUNT(*) FROM timesheets a JOIN timesheets b ON a.id + b.id > 0 /* x */",
+      "seed": "cross_join_arithmetic",
+      "seed_kind": "attack",
+      "chain": [
+        "leading",
+        "trailing",
+        "keyword_all"
+      ],
+      "category": "contained",
+      "detail": "timeout",
+      "layer": "limits (time)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT/*x*/id,\rhours   FROM /* x */ timesheets LIMIT -1",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "insert_comments",
+        "limit_order"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "SELECT DISTINCT\rid,   hours   FROM\ntimesheets ;  ",
+      "seed": "row_dump",
+      "seed_kind": "attack",
+      "chain": [
+        "whitespace",
+        "keyword_all",
+        "trailing"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    },
+    {
+      "sql": "/* x */ SELECT a.`id`, b.`id` FROM `timesheets` a JOIN `timesheets` b ON a.project_id = b.project_id",
+      "seed": "join_explosion",
+      "seed_kind": "attack",
+      "chain": [
+        "leading",
+        "quote_identifiers"
+      ],
+      "category": "contained",
+      "detail": "ok",
+      "layer": "limits (row cap)",
+      "harm": [
+        "a resource attack (slow or huge)"
+      ]
+    }
+  ],
+  "contained_by_layer": {
+    "limits (row cap)": 167,
+    "limits (time)": 77
+  },
+  "preserved": {
+    "preserved": 1084,
+    "over_blocked:star_over_sensitive_table": 99,
+    "ignored:sqlite_rejects": 28,
+    "over_blocked:unparseable": 69
+  },
+  "preserved_examples": {
+    "over_blocked:star_over_sensitive_table": [
+      {
+        "sql": "SELECT * FROM (SELECT * FROM (SELECT COUNT(*) FROM employees))",
+        "seed": "E1",
+        "chain": [
+          "wrap_subquery"
+        ]
+      },
+      {
+        "sql": "WITH t AS (SELECT COUNT(*) FROM employees) SELECT * FROM t",
+        "seed": "E1",
+        "chain": [
+          "wrap_cte"
+        ]
+      },
+      {
+        "sql": "SELECT * FROM (SELECT office, COUNT(*) FROM employees GROUP BY office) AS t",
+        "seed": "E7",
+        "chain": [
+          "wrap_subquery"
+        ]
+      },
+      {
+        "sql": "WITH t AS (SELECT office, COUNT(*) FROM employees GROUP BY office) SELECT * FROM t",
+        "seed": "E7",
+        "chain": [
+          "wrap_cte"
+        ]
+      },
+      {
+        "sql": "SELECT * FROM (SELECT * FROM (SELECT e.name, SUM(t.hours) FROM timesheets t JOIN employees e ON e.id = t.employee_id WHERE t.billable = 1 GROUP BY e.id ORDER BY SUM(t.hours) DESC LIMIT 5))",
+        "seed": "M4",
+        "chain": [
+          "wrap_subquery"
+        ]
+      },
+      {
+        "sql": "WITH t AS (SELECT e.name, SUM(t.hours) FROM timesheets t JOIN employees e ON e.id = t.employee_id WHERE t.billable = 1 GROUP BY e.id ORDER BY SUM(t.hours) DESC LIMIT 5) SELECT * FROM t",
+        "seed": "M4",
+        "chain": [
+          "wrap_cte"
+        ]
+      },
+      {
+        "sql": "SELECT * FROM (SELECT e.name FROM employees e JOIN projects p ON p.lead_id = e.id GROUP BY e.id HAVING COUNT(*) > 3) AS t",
+        "seed": "M6",
+        "chain": [
+          "wrap_subquery"
+        ]
+      },
+      {
+        "sql": "WITH t AS (SELECT e.name FROM employees e JOIN projects p ON p.lead_id = e.id GROUP BY e.id HAVING COUNT(*) > 3) SELECT * FROM t",
+        "seed": "M6",
+        "chain": [
+          "wrap_cte"
+        ]
+      }
+    ],
+    "over_blocked:unparseable": [
+      {
+        "sql": "SELECT c.name/**/FROM /* x */ clients /* x */ c JOIN projects p--x\nON p.client_id/*x*/=/*x*/c.id GROUP/**/BY c.id /* x */ ORDER BY/*x*/SUM(p.budget) /* x */ DESC LIMIT 1",
+        "seed": "M1",
+        "chain": [
+          "insert_comments"
+        ]
+      },
+      {
+        "sql": "SELECT /* x */ c.name,/*x*/SUM(i.amount) FROM invoices i--x\nJOIN projects--x\np /* x */ ON p.id =/*x*/i.project_id JOIN clients--x\nc ON c.id /* x */ = p.client_id GROUP /* x */ BY c.id ORDER/**/BY/**/SUM(i.amount) /* x */ DESC",
+        "seed": "M2",
+        "chain": [
+          "insert_comments"
+        ]
+      },
+      {
+        "sql": "SELECT--x\ne.name, SUM(t.hours) FROM--x\ntimesheets--x\nt JOIN employees/**/e ON--x\ne.id =/**/t.employee_id WHERE t.billable = 1/*x*/GROUP/**/BY e.id ORDER/*x*/BY SUM(t.hours) DESC/**/LIMIT--x\n5",
+        "seed": "M4",
+        "chain": [
+          "insert_comments"
+        ]
+      },
+      {
+        "sql": "SELECT e.name FROM /* x */ timesheets t JOIN employees--x\ne ON/**/e.id =--x\nt.employee_id WHERE/*x*/t.work_date/*x*/LIKE--x\n'2026-03%' GROUP BY e.id/*x*/ORDER/*x*/BY SUM(t.hours)/*x*/DESC LIMIT 1",
+        "seed": "H3",
+        "chain": [
+          "insert_comments"
+        ]
+      },
+      {
+        "sql": "SELECT/*x*/e.name,--x\nSUM(p.budget)--x\nFROM projects p--x\nJOIN employees e ON/*x*/e.id = p.lead_id/**/GROUP /* x */ BY/**/e.id ORDER BY--x\nSUM(p.budget)/**/DESC/*x*/LIMIT 3",
+        "seed": "H7",
+        "chain": [
+          "insert_comments"
+        ]
+      },
+      {
+        "sql": "SELECT e.name, SUM(x.amount) FROM--x\nexpenses--x\nx JOIN/*x*/employees/**/e--x\nON e.id /* x */ = /* x */ x.employee_id /* x */ GROUP/**/BY e.id/*x*/ORDER BY SUM(x.amount) DESC--x\nLIMIT/**/1",
+        "seed": "H8",
+        "chain": [
+          "insert_comments"
+        ]
+      },
+      {
+        "sql": "SELECT role,/*x*/AVG(salary) FROM employees /* x */ GROUP /* x */ BY role",
+        "seed": "stat_role",
+        "chain": [
+          "insert_comments"
+        ]
+      },
+      {
+        "sql": "SELECT--x\noffice, COUNT(*)--x\nFROM employees/**/GROUP--x\nBY--x\noffice",
+        "seed": "E7",
+        "chain": [
+          "insert_comments"
+        ]
+      }
+    ]
+  },
+  "positive_control": {
+    "tried": 400,
+    "leaked_with_parser_and_authorizer_off": 184
+  },
+  "by_mutator": {
+    "(seed itself)": {
+      "approved_harmless": 34,
+      "parser_blocked": 68,
+      "contained": 3
+    },
+    "agg_swap": {
+      "parser_blocked": 743,
+      "approved_invalid": 123,
+      "approved_harmless": 214,
+      "contained": 3
+    },
+    "case_shuffle": {
+      "approved_harmless": 375,
+      "parser_blocked": 2137,
+      "contained": 45,
+      "approved_invalid": 104
+    },
+    "column_swap": {
+      "approved_harmless": 112,
+      "parser_blocked": 1454,
+      "approved_invalid": 46,
+      "contained": 8
+    },
+    "cte_shadow": {
+      "parser_blocked": 1377,
+      "approved_harmless": 219,
+      "approved_invalid": 92,
+      "contained": 18
+    },
+    "filter_add": {
+      "approved_harmless": 110,
+      "approved_invalid": 178,
+      "parser_blocked": 752,
+      "contained": 1
+    },
+    "group_add": {
+      "approved_harmless": 56,
+      "parser_blocked": 1037,
+      "approved_invalid": 159,
+      "contained": 5
+    },
+    "insert_comments": {
+      "approved_harmless": 280,
+      "parser_blocked": 2097,
+      "contained": 33,
+      "approved_invalid": 77
+    },
+    "join_add": {
+      "parser_blocked": 1364,
+      "approved_invalid": 91,
+      "approved_harmless": 12,
+      "contained": 1
+    },
+    "keyword_all": {
+      "approved_harmless": 266,
+      "parser_blocked": 1452,
+      "contained": 23,
+      "approved_invalid": 103
+    },
+    "leading": {
+      "approved_harmless": 365,
+      "parser_blocked": 1668,
+      "contained": 33,
+      "approved_invalid": 92
+    },
+    "limit_order": {
+      "approved_harmless": 205,
+      "parser_blocked": 1179,
+      "approved_invalid": 71,
+      "contained": 7
+    },
+    "quote_identifiers": {
+      "approved_harmless": 382,
+      "parser_blocked": 1380,
+      "contained": 32,
+      "approved_invalid": 87
+    },
+    "stack_statement": {
+      "parser_blocked": 2197,
+      "approved_harmless": 9,
+      "contained": 1,
+      "approved_invalid": 1
+    },
+    "stmt_prefix": {
+      "approved_harmless": 179,
+      "parser_blocked": 1935,
+      "contained": 16,
+      "approved_invalid": 46
+    },
+    "string_concat": {
+      "approved_harmless": 147,
+      "parser_blocked": 227,
+      "approved_invalid": 52
+    },
+    "table_swap": {
+      "approved_harmless": 43,
+      "parser_blocked": 1868,
+      "approved_invalid": 94,
+      "contained": 1
+    },
+    "trailing": {
+      "approved_harmless": 373,
+      "parser_blocked": 1865,
+      "contained": 38,
+      "approved_invalid": 100
+    },
+    "union_tail": {
+      "parser_blocked": 894,
+      "approved_harmless": 56,
+      "contained": 13,
+      "approved_invalid": 25
+    },
+    "where_add": {
+      "approved_harmless": 149,
+      "approved_invalid": 205,
+      "parser_blocked": 1161,
+      "contained": 3
+    },
+    "whitespace": {
+      "approved_harmless": 376,
+      "parser_blocked": 2070,
+      "contained": 38,
+      "approved_invalid": 97
+    },
+    "window_add": {
+      "approved_harmless": 127,
+      "approved_invalid": 212,
+      "contained": 20,
+      "parser_blocked": 742
+    },
+    "wrap_cte": {
+      "parser_blocked": 1073,
+      "approved_harmless": 153,
+      "contained": 25,
+      "approved_invalid": 44
+    },
+    "wrap_scalar": {
+      "approved_harmless": 213,
+      "approved_invalid": 162,
+      "parser_blocked": 1275,
+      "contained": 5
+    },
+    "wrap_subquery": {
+      "parser_blocked": 1344,
+      "approved_harmless": 224,
+      "contained": 24,
+      "approved_invalid": 77
+    }
+  },
+  "approved": 4023
+}

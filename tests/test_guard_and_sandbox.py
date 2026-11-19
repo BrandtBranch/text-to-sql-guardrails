@@ -121,3 +121,10 @@ def test_a_policy_can_allow_what_the_default_forbids(db):
     relaxed = Policy.for_database(db, denied_columns=frozenset(), allow_recursive=True)
     assert validate("SELECT salary FROM employees", relaxed).sql
     assert validate("WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM r WHERE n < 5) SELECT n FROM r", relaxed).sql
+
+
+def test_a_trailing_comment_after_the_semicolon_is_not_a_second_statement(policy):
+    assert validate("SELECT COUNT(*) FROM employees;--x", policy).sql == "SELECT COUNT(*) FROM employees"
+    assert validate("SELECT 1; /* ; DROP TABLE clients */", policy).sql == "SELECT 1"  # the comment is dropped, never executed
+    assert blocked_code("SELECT 1; SELECT 2 --x", policy) == "multiple_statements"  # a real second statement still counts
+    assert blocked_code("SELECT 1;--x\nDROP TABLE clients", policy) == "multiple_statements"  # the comment ends at the line break; the DROP is a real second statement

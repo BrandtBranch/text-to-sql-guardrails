@@ -6,5 +6,6 @@ __pycache__/
 data/consulting.db
 data/consulting.xlsx
 results/*/accuracy.log
+results/*/fuzz.log
 results/*/redteam.log
 scratch/

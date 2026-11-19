@@ -42,6 +42,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("attacks", help="Run the SQL attack suite against every combination of guardrail layers (no model)")
     regrade = sub.add_parser("regrade-redteam", help="Re-score a saved red-team run by replaying its SQL, without calling any model")
     regrade.add_argument("results", type=Path)
+    fz = sub.add_parser("fuzz", help="Differential fuzz of the guardrails: thousands of query variations, no model")
+    fz.add_argument("--budget", type=int, default=15000)
+    fz.add_argument("--seed", type=int, default=1)
+    fz.add_argument("--out", type=Path, default=Path("results/fuzz"))
     sub.add_parser("differencing", help="Show a differencing attack on salary statistics, with and without the audit layer (no model)")
 
     def model_args(p):
@@ -88,6 +92,13 @@ def main(argv: list[str] | None = None) -> int:
         if not backup.exists():
             backup.write_text(args.results.read_text(encoding="utf-8"), encoding="utf-8")
         _save(args.results.parent, "redteam", regrade_redteam(data, args.db), render_redteam(data))
+        return 0
+    if args.command == "fuzz":
+        from .fuzz import render as render_fuzz
+        from .fuzz import run_fuzz
+
+        result = run_fuzz(args.db, args.budget, args.seed, progress=lambda i, n: print(f"[fuzz] {i}/{n}", file=sys.stderr, flush=True))
+        _save(args.out, "fuzz", result, render_fuzz(result))
         return 0
     if args.command == "differencing":
         from .privacy import differencing_attack, render
