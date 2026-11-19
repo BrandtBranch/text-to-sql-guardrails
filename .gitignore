@@ -1,0 +1,10 @@
+*.egg-info/
+.env
+.pytest_cache/
+.venv/
+__pycache__/
+data/consulting.db
+data/consulting.xlsx
+results/*/accuracy.log
+results/*/redteam.log
+scratch/
