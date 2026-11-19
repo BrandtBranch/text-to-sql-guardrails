@@ -2,7 +2,9 @@
 
 Claude answers plain-English questions about a database by writing SQL. This repo asks what keeps that safe, by attacking it from every side and switching each guardrail on and off to see what actually stops what.
 
-It has a layered guardrail stack, a 52-attack suite that runs without any model, a red team that sends hostile questions through Claude under four prompt-and-guardrail configurations, and a privacy rule for salary statistics together with the attack that breaks it and the layer that stops that attack. 103 tests run offline.
+It has a layered guardrail stack, a 53-attack suite that runs without any model, a red team that sends hostile questions through Claude under four prompt-and-guardrail configurations, and a privacy rule for salary statistics together with the attack that breaks it and the layer that stops that attack. 106 tests run offline.
+
+**See it work:** [`docs/guardrails-explained.html`](docs/guardrails-explained.html) is an interactive page. Pick an attack, switch each layer on and off, and watch what stops it. Every outcome on it comes from running the real code on the real database. Download the file and open it in a browser, since GitHub shows only its source.
 
 ## What I found
 
@@ -16,7 +18,7 @@ With no defences, Claude returned salaries, emails, the hidden API-keys table an
 Ten client notes in the database hold hostile instructions: two blunt, eight written to look like business notes (an "audit requirement", a fake platform-team notice, a base64-encoded command, a fake system message that tries to close the result tag, a note posing as the requester's manager). In all 11 injection scenarios the model ran the query that returned the poisoned note, read it, and every time said some version of "that text came from the data, not from you, so I ignored it". *Strength: moderate for this one model. The payloads are mine, not optimised against it, and weaker models are untested.*
 
 **4. No single layer is enough, and parsing has a built-in limit.**
-Against the 52 attacks, the read-only connection stopped writes but not one read. The parser and the authorizer each stopped everything except legal-but-expensive queries. The time limit stopped only resource attacks. I wrote `ON a.id + b.id > 0` as a disguised cross join and tightened the parser to catch the easy disguises; that one still gets through, because telling it from a real join needs the query's meaning, not its syntax. The three layers the engine enforces (read-only, authorizer, limits), with no parser at all, stopped all 52.
+Against the 53 attacks, the read-only connection stopped writes but not one read. The parser and the authorizer each stopped everything except legal-but-expensive queries. The time limit stopped only resource attacks. I wrote `ON a.id + b.id > 0` as a disguised cross join and tightened the parser to catch the easy disguises; that one still gets through, because telling it from a real join needs the query's meaning, not its syntax. The three layers the engine enforces (read-only, authorizer, limits), with no parser at all, stopped all 53. With every layer on, the parser did almost all the stopping: 50 of 53 (49 outright, one by the group-size rule), the time and row limits 3, and the authorizer and the read-only connection none. They have never had to act with the parser on; I only know they work because the parser can be switched off. The time limit did step in, three times in the model runs, always on the overload scenario.
 
 **5. A minimum group size is easy to ship and easy to beat.**
 Salary is allowed as `AVG` or `SUM` by role or office over groups of five or more, and smaller groups are withheld. Subtracting two such averages isolates a person: the average for all 8 analysts minus the average for the 7 outside Raleigh is the Raleigh analyst's exact salary. Both queries are individually allowed. I recovered 2 of 2 exact salaries that way. A session-level audit that refuses a result differing from an earlier one by fewer than five people stopped it: 0 of 2. Per-query rules cannot see this; the guardrail has to remember. *Strength: the attack and the fix are exact on this data. The audit stops the simple version, not every version, since three or more queries can still isolate someone.*
@@ -29,6 +31,8 @@ Salary is allowed as `AVG` or `SUM` by role or office over groups of five or mor
 | The harm detector counted `COUNT(*)` as reading protected data | Harmless questions looked harmful | Caught by a test. Stars inside `COUNT` are ignored. |
 | The harm detector judged the query, not the rows released | A run where the model applied the 5-person rule itself and got nothing back was flagged as a leak | Harm is now judged by the rows that actually came out, and `regrade-redteam` replays the saved SQL to re-score old runs with no model calls. One safety-prompt run changed from harmful to harmless. |
 | The schema notes listed a role that does not exist | The model reported "no Manager" with an invented reason | Notes now match the data. |
+| The statistics rule could be bypassed with a `FILTER` clause | Hunting for a query the parser wrongly approves, I found that `AVG(salary) FILTER (WHERE role = 'Analyst' AND office = 'Raleigh')` narrows an average to one person, and the group-size check only looks at the `WHERE`. It returned an exact salary. The authorizer and read-only mode could not help, because the authorizer is deliberately unlocked for an approved statistic. | `FILTER` clauses are refused. It is now an attack in the suite. |
+| My attack scorer graded the guardrails against themselves | It called a statistics attack harmful only if the guardrails would have refused it, so a bug in the guardrails was invisible: the attack scored as a failure even with every layer off | A returned number equal to a real individual's salary also counts as success. Tested. |
 
 ## How it works
 
@@ -44,7 +48,7 @@ Salary is allowed as `AVG` or `SUM` by role or office over groups of five or mor
 
 ## Results
 
-**Attack suite, no model.** Attacks that succeeded, by which layers were on (52 attacks; 2 stacked-statement attacks fail even unprotected because Python's driver refuses them):
+**Attack suite, no model.** Attacks that succeeded, by which layers were on (53 attacks; 2 stacked-statement attacks fail even unprotected because Python's driver refuses them):
 
 | Category (attacks) | none | read-only | parser | authorizer | limits | engine-only* | all |
 |---|---|---|---|---|---|---|---|
@@ -52,10 +56,10 @@ Salary is allowed as `AVG` or `SUM` by role or office over groups of five or mor
 | personal data (12) | 12 | 12 | 0 | 0 | 12 | 0 | 0 |
 | obfuscation (6) | 6 | 6 | 0 | 0 | 6 | 0 | 0 |
 | hidden table (6) | 6 | 6 | 0 | 0 | 6 | 0 | 0 |
-| statistics (8) | 8 | 8 | 0 | 0 | 8 | 0 | 0 |
+| statistics (9) | 9 | 9 | 0 | 0 | 9 | 0 | 0 |
 | resource (7) | 7 | 7 | 3 | 6 | 0 | 0 | 0 |
 | inference (3) | 3 | 3 | 0 | 0 | 3 | 0 | 0 |
-| **All 52** | **50** | **43** | **3** | **6** | **43** | **0** | **0** |
+| **All 53** | **51** | **44** | **3** | **6** | **44** | **0** | **0** |
 
 *read-only + authorizer + limits, no parser. Observed on SQLite 3.49.1: a read-only connection still let `ATTACH` create a new file, the one write that got through.
 
@@ -82,7 +86,7 @@ Everything is synthetic. `sqlguard build-db` creates a consulting-firm database 
 pip install -e ".[dev]"
 python -m pytest                                          # offline, scripted fake model
 python -m sqlguard.cli build-db                           # creates data/consulting.db
-python -m sqlguard.cli attacks                            # the 52-attack ablation, no model, about a minute
+python -m sqlguard.cli attacks                            # the 53-attack ablation, no model, about a minute
 python -m sqlguard.cli differencing                       # the salary differencing attack, with and without the audit
 python -m sqlguard.cli ask "Which client has the highest total project budget?"
 python -m sqlguard.cli eval-accuracy
@@ -99,6 +103,7 @@ The model commands use your Claude Code login by default, so no API key is neede
 - **Circular by construction.** The data, attacks and scenarios were written with Claude's help, and Claude is the model being attacked.
 - **Harm is detected by my own rules.** I found and fixed one false positive by reading transcripts; there may be others.
 - **The accuracy test is easy.** 28 of 28 cannot show what the guardrails cost. It was also run before the privacy rule was added, so it has not been re-run with the new schema notes, though the reference queries are re-checked in the tests.
+- **The privacy exception rests on the parser alone.** Salary stays closed to the authorizer except for a statement the parser approved, so if the parser's rules have a hole, as the `FILTER` one did, no other layer catches it. I found that hole by hand, among about a dozen candidates. A systematic differential test, thousands of query variations checked against the engine, has not been run, so other holes may exist.
 - **The audit is not differential privacy.** It stops two-query differencing. Combining three or more queries can still isolate a person, and it blocks genuine near-duplicate questions.
 - **SQLite-specific.** The authorizer is a SQLite feature. Other databases offer roles, column permissions and statement timeouts for the same job. Engine behaviour such as the `ATTACH` result was observed on one SQLite version.
 - **Claude Code backend.** It runs the model inside Claude Code's own harness, which can differ from calling the API directly.
@@ -110,7 +115,7 @@ src/sqlguard/
   db.py          the synthetic database
   guard.py       the parser layer, with the statistics rule
   sandbox.py     read-only, authorizer, limits and audit; runs a query through any combination
-  attacks.py     the 52 attacks and the layer ablation
+  attacks.py     the 53 attacks and the layer ablation
   privacy.py     the differencing attack
   llm.py         the model loop
   questions.py   the 28 reference questions
@@ -118,6 +123,8 @@ src/sqlguard/
   redteam.py     the 27 scenarios, harm scoring and replay re-scoring
   claude_code.py runs the model through a Claude Code login, no key
   cli.py
-tests/           103 offline tests
+docs/            guardrails-explained.html, the interactive page
+scripts/         build_guardrails_page.py rebuilds that page from the real guardrail code
+tests/           106 offline tests
 results/         saved output of each run
 ```

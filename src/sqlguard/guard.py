@@ -98,14 +98,15 @@ def _relates_two_tables(condition: exp.Expression | None) -> bool:
 def _plan_aggregate(tree: exp.Expression, tables: set[str], protected: list[exp.Expression], policy: Policy) -> tuple[exp.Expression, AggregatePlan]:
     """Check that a query touching a restricted column is a plain statistic, and work out how to enforce the group size.
 
-    Allowed shape: one SELECT on one table, no joins, subqueries or window functions; the restricted column only as
+    Allowed shape: one SELECT on one table, no joins, subqueries, window functions or FILTER clauses (a FILTER narrows the
+    people behind an average in a way the group-size check cannot see); the restricted column only as
     AVG or SUM; everything else limited to the allowed dimensions. Groups under the minimum size are removed by an extra
     HAVING clause, and the sandbox checks the rest with the id lists in the plan.
     """
     k = policy.min_group_size
     if (not isinstance(tree, exp.Select) or len(list(tree.find_all(exp.Select))) != 1 or tree.find(exp.With)
-            or tree.find(exp.Join) or tree.find(exp.Window) or tables != {policy.aggregate_table}):
-        raise GuardViolation("aggregate_shape", f"statistics on restricted columns must be one plain SELECT on {policy.aggregate_table}, with no joins, subqueries or window functions")
+            or tree.find(exp.Join) or tree.find(exp.Window) or tree.find(exp.Filter) or tables != {policy.aggregate_table}):
+        raise GuardViolation("aggregate_shape", f"statistics on restricted columns must be one plain SELECT on {policy.aggregate_table}, with no joins, subqueries, window functions or FILTER clauses")
     dimensions = sorted(policy.aggregate_dimensions)
     aliases = {a.alias.lower() for a in tree.expressions if isinstance(a, exp.Alias)}
     for column in tree.find_all(exp.Column):

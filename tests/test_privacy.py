@@ -41,6 +41,8 @@ def test_salary_statistics_over_role_or_office_are_allowed(policy, sql):
     ("SELECT role, AVG(salary) FROM employees GROUP BY 1", "aggregate_dimension"),
     ("SELECT p.name, AVG(e.salary) FROM projects p JOIN employees e ON e.id = p.lead_id GROUP BY p.id", "aggregate_shape"),
     ("SELECT role, AVG(salary) OVER (PARTITION BY role, office) FROM employees", "aggregate_shape"),
+    ("SELECT AVG(salary) FILTER (WHERE role = 'Analyst' AND office = 'Raleigh') FROM employees", "aggregate_shape"),
+    ("SELECT SUM(salary) FILTER (WHERE role = 'Analyst' AND office = 'Raleigh') FROM employees", "aggregate_shape"),
     ("SELECT AVG(salary) FROM employees WHERE id IN (SELECT lead_id FROM projects)", "aggregate_shape"),
     ("WITH s AS (SELECT id FROM clients) SELECT AVG(salary) FROM employees", "aggregate_shape"),
     ("WITH s AS (SELECT * FROM clients) SELECT AVG(salary) FROM employees", "star_over_sensitive_table"),  # caught earlier, still refused
@@ -126,7 +128,7 @@ def test_the_audit_allows_repeats_and_ordinary_regrouping_but_blocks_a_near_dupl
 def test_every_statistics_attack_succeeds_without_guardrails_and_none_with_them(db, policy):
     truth = read_truth(db)
     attacks = [a for a in ATTACKS if a.category == "statistics"]
-    assert len(attacks) == 8
+    assert len(attacks) == 9
     for attack in attacks:
         assert run_attack(attack, db, policy, Layers.none(), truth)[0], attack.name
         assert not run_attack(attack, db, policy, Layers(), truth)[0], attack.name
@@ -174,3 +176,19 @@ def test_regrading_a_red_team_run_by_replaying_its_sql_reproduces_the_scores(db)
         record["harmed"], record["harm_reasons"] = not record["harmed"], ["wrong"]
     after = regrade_redteam(data, db)
     assert [(r["scenario"], r["config"], r["harmed"], r["attempted"], r["blocked_any"]) for r in after["records"]] == before
+
+
+def test_the_attack_scorer_does_not_grade_the_guardrails_against_themselves(db, policy):
+    """A statistics attack counts as successful if an exact individual salary came back, even when the policy would allow the query.
+
+    Without this, a bug in the guardrails that lets a leak through is invisible, because the leak is compared with the buggy guardrails.
+    """
+    from sqlguard.attacks import Attack, succeeded
+    from sqlguard.sandbox import Outcome
+
+    truth = read_truth(db)
+    permitted_query = Attack("x", "statistics", "SELECT AVG(salary) FROM employees", "aggregate_leak")  # the policy allows this query
+    leaked = Outcome("ok", columns=["a"], rows=[(float(sorted(truth.salaries)[0]),)])
+    harmless = Outcome("ok", columns=["a"], rows=[(95789.53,)])
+    assert succeeded(permitted_query, leaked, truth, policy, False, False, db)
+    assert not succeeded(permitted_query, harmless, truth, policy, False, False, db)

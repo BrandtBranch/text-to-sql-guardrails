@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the guardrails work</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1b2430; --muted: #5d6b7c; --line: #d9dee5;
+    --ok: #1a7f4b; --ok-bg: #e3f4ea; --bad: #c0302d; --bad-bg: #fbe6e5; --warn: #9a6200; --warn-bg: #fdf0d4;
+    --accent: #2457c5; --accent-bg: #e6edfb; --off: #9aa5b3; --code-bg: #eef1f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1419; --panel: #181f27; --text: #e6ebf1; --muted: #9aa8b8; --line: #2b3541;
+      --ok: #4cc38a; --ok-bg: #12301f; --bad: #ff7b78; --bad-bg: #3a1716; --warn: #f0b955; --warn-bg: #36290d;
+      --accent: #7aa2ff; --accent-bg: #19233d; --off: #5d6b7c; --code-bg: #10161c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 2rem; margin: 0 0 8px; line-height: 1.2; }
+  h2 { font-size: 1.35rem; margin: 48px 0 6px; }
+  h3 { font-size: 1rem; margin: 0 0 6px; }
+  p { margin: 0 0 12px; }
+  .lede { font-size: 1.1rem; color: var(--muted); max-width: 70ch; }
+  .muted { color: var(--muted); }
+  code, pre { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.86rem; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 0; white-space: pre-wrap; word-break: break-word; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  details.words { margin-top: 16px; }
+  details.words summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  details.words dl { margin: 12px 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; }
+  details.words dt { font-weight: 600; } details.words dd { margin: 0; color: var(--muted); }
+
+  .lab { display: grid; grid-template-columns: 260px 1fr; gap: 16px; margin-top: 16px; align-items: start; }
+  @media (max-width: 820px) { .lab { grid-template-columns: 1fr; } }
+  .picker h3 { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 0 6px; }
+  .picker h3:first-child { margin-top: 0; }
+  .picker button { display: block; width: 100%; text-align: left; background: transparent; color: var(--text); border: 1px solid transparent;
+                   border-radius: 8px; padding: 7px 10px; font: inherit; font-size: .92rem; cursor: pointer; }
+  .picker button:hover { background: var(--accent-bg); }
+  .picker button[aria-pressed="true"] { background: var(--accent-bg); border-color: var(--accent); font-weight: 600; }
+  .sql-title { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+  .tag { font-size: .72rem; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  .tag.legit { background: var(--ok-bg); color: var(--ok); } .tag.attack { background: var(--bad-bg); color: var(--bad); }
+
+  .toggles { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 4px; }
+  .toggles label { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px 6px 10px;
+                   cursor: pointer; font-size: .9rem; background: var(--panel); user-select: none; }
+  .toggles input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .toggles label:has(input:checked) { border-color: var(--accent); background: var(--accent-bg); }
+
+  .pipeline { display: flex; align-items: stretch; gap: 0; margin: 14px 0 6px; }
+  .stage { flex: 1 1 0; min-width: 0; display: flex; align-items: stretch; }
+  .arrow { flex: 0 0 22px; display: flex; align-items: center; justify-content: center; color: var(--off); font-size: 1.1rem; }
+  .station { flex: 1; border: 2px solid var(--line); border-radius: 12px; padding: 10px; background: var(--panel); cursor: pointer; text-align: left;
+             font: inherit; color: var(--text); transition: background .25s, border-color .25s, opacity .25s; opacity: .45; min-height: 120px; }
+  .station.shown { opacity: 1; }
+  .station .nm { font-weight: 700; font-size: .95rem; } .station .nk { font-size: .75rem; color: var(--muted); margin-bottom: 6px; }
+  .station .st { font-size: .8rem; line-height: 1.35; }
+  .station[data-s="pass"] { border-color: var(--ok); background: var(--ok-bg); }
+  .station[data-s="stop"] { border-color: var(--bad); background: var(--bad-bg); }
+  .station[data-s="off"] { border-style: dashed; background: transparent; color: var(--off); }
+  .station[data-s="skipped"] { background: transparent; color: var(--off); }
+  .station[aria-current="true"] { box-shadow: 0 0 0 3px var(--accent-bg), 0 0 0 4px var(--accent); }
+  .badge { display: inline-block; font-size: .7rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-bottom: 4px; }
+  .station[data-s="miss"] { border-color: var(--warn); background: var(--warn-bg); }
+  .station[data-s="pass"] .badge { background: var(--ok); color: var(--panel); } .station[data-s="stop"] .badge { background: var(--bad); color: var(--panel); }
+  .station[data-s="miss"] .badge { background: var(--warn); color: var(--panel); }
+  .options { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 4px 0 0; }
+  .options .hint { font-size: .82rem; color: var(--muted); flex: 1 1 280px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .8rem; color: var(--muted); margin: 6px 0 0; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .chip { font-size: .74rem; padding: 1px 8px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn); }
+  .fill.good { background: var(--ok); } .fill.mid { background: var(--warn); }
+  .db { flex: 0 0 112px; border: 2px solid var(--line); border-radius: 12px; padding: 10px; text-align: center; background: var(--panel); opacity: .45; transition: all .25s; display: flex; flex-direction: column; justify-content: center; }
+  .db.shown { opacity: 1; } .db .nm { font-weight: 700; } .db .st { font-size: .8rem; }
+  .db[data-s="harm"] { border-color: var(--bad); background: var(--bad-bg); } .db[data-s="ok"] { border-color: var(--ok); background: var(--ok-bg); }
+  .db[data-s="bad"] { border-color: var(--warn); background: var(--warn-bg); } .db[data-s="safe"] { border-style: dashed; color: var(--muted); background: transparent; }
+  @media (max-width: 820px) {
+    .pipeline { flex-direction: column; } .stage { flex-direction: column; } .arrow { flex-basis: 20px; transform: rotate(90deg); }
+    .db { flex-basis: auto; }
+  }
+  .verdict { border-radius: 12px; padding: 14px 16px; margin: 12px 0; border: 1px solid; min-height: 64px; }
+  .verdict.good { background: var(--ok-bg); border-color: var(--ok); } .verdict.badv { background: var(--bad-bg); border-color: var(--bad); }
+  .verdict.warnv { background: var(--warn-bg); border-color: var(--warn); }
+  .verdict strong { display: block; font-size: 1.05rem; margin-bottom: 2px; }
+  .alone { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
+  .alone li { font-size: .82rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); }
+  .alone li.y { border-color: var(--ok); color: var(--ok); } .alone li.n { border-color: var(--bad); color: var(--bad); }
+  .info { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .info { grid-template-columns: 1fr; } }
+  .info h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .info ul { margin: 0; padding-left: 1.1rem; font-size: .92rem; } .info li { margin-bottom: 3px; }
+  .catch h3 { color: var(--ok); } .miss h3 { color: var(--bad); }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+  @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } }
+  .step .n { font-size: .75rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .05em; }
+  .step .big { font-size: 1.35rem; font-weight: 700; margin: 6px 0; font-variant-numeric: tabular-nums; }
+  .step.blocked { border-color: var(--bad); background: var(--bad-bg); } .step.leak { border-color: var(--bad); }
+  .switch { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px 6px 10px; background: var(--panel); cursor: pointer; }
+  .switch input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+  .bars { display: grid; gap: 14px; margin-top: 16px; }
+  .bar .row { display: flex; justify-content: space-between; gap: 8px; font-size: .92rem; margin-bottom: 4px; flex-wrap: wrap; }
+  .track { height: 14px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .fill { height: 100%; background: var(--bad); border-radius: 999px; min-width: 0; }
+  .fill.zero { background: var(--ok); width: 6px !important; }
+  footer { margin-top: 48px; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--line); padding-top: 16px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>How the guardrails work</h1>
+    <p class="lede">An AI turns a plain-English question into a database command. These layers sit between that command and the database, so that a tricked or careless AI cannot leak private data, change anything, or overload the system. Everything below was produced by running the real code on the real (made-up) database.</p>
+    <details class="words">
+      <summary>New to this? Key words</summary>
+      <dl>
+        <dt>SQL / query</dt><dd>The language used to ask a database for data. A "query" is one command, like <code>SELECT name FROM clients</code>.</dd>
+        <dt>Red team</dt><dd>People (or here, me) whose job is to attack a system on purpose, to find weak points before a real attacker does.</dd>
+        <dt>Guardrail</dt><dd>A safety layer that checks or limits what a command can do.</dd>
+        <dt>Private data</dt><dd>In this made-up database: staff salaries and emails, and a hidden table of fake passwords.</dd>
+        <dt>Injection</dt><dd>Hostile instructions hidden in data (like a client note) hoping the AI will obey them.</dd>
+      </dl>
+    </details>
+  </header>
+
+  <h2>1. Try an attack</h2>
+  <p class="muted">Pick a command on the left, then switch the four layers on and off. The command travels left to right. Click any layer to read what it does.</p>
+  <div class="lab">
+    <nav class="picker card" id="picker" aria-label="Examples"></nav>
+    <div>
+      <div class="card">
+        <div class="sql-title"><h3 id="ex-title"></h3><span class="tag" id="ex-tag"></span></div>
+        <p class="muted" id="ex-plain"></p>
+        <pre id="ex-sql"></pre>
+        <div class="toggles" id="toggles" role="group" aria-label="Guardrail layers"></div>
+        <div class="options">
+          <label class="switch"><input type="checkbox" id="indep" checked> <span>Show every layer's own verdict</span></label>
+          <span class="hint" id="indep-hint"></span>
+        </div>
+        <div class="pipeline" id="pipeline"></div>
+        <div class="legend" id="legend"></div>
+        <div class="verdict" id="verdict" aria-live="polite"></div>
+        <div id="alone-wrap">
+          <p class="muted" style="margin:10px 0 4px">If only one layer were switched on, would it stop this?</p>
+          <ul class="alone" id="alone"></ul>
+        </div>
+      </div>
+      <div class="card info" id="info" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <h2>2. Which layer stops what?</h2>
+  <p class="muted" style="max-width:72ch">In the order they run, the parser goes first and cheaply refuses most things, so it can look like the only layer that matters. This asks the harder question: switch every other layer off and see how many of the real attacks each one stops on its own. There are <span id="n-attacks"></span> attacks in the suite, and <span id="n-real"></span> of them actually work against an unprotected database.</p>
+  <div class="card">
+    <div class="bars" id="coverage"></div>
+    <p style="margin:16px 0 0"><strong>How to read it:</strong> the parser alone stops most attacks, but not the ones that are legal-looking and expensive. The three layers the database itself enforces stop all <span class="n-real"></span> between them in this suite, even with no parser at all. That is the suite I wrote, so it shows what I thought of, not everything an attacker might. The parser earns its place by giving clear error messages and refusing early. The other layers are what remains when the parser is wrong. No single layer is the whole answer.</p>
+  </div>
+
+  <h2>3. The salary puzzle</h2>
+  <p class="muted" style="max-width:72ch">Salary is allowed, but only as an average over five or more people, so nobody's pay is exposed. That sounds safe. It isn't, if you can ask two questions and compare. Switch the fifth layer, the audit, on and off.</p>
+  <div class="card">
+    <label class="switch"><input type="checkbox" id="audit" checked> <span>Audit layer (remembers earlier answers)</span></label>
+    <div class="steps" id="steps"></div>
+    <p class="muted" id="diff-note" style="margin:0"></p>
+  </div>
+
+  <h2>4. Why not just tell the AI to behave?</h2>
+  <p class="muted" style="max-width:72ch">I sent 23 hostile requests through Claude under four setups. The bars show how many caused real harm: private data released, data changed, or the system overloaded.</p>
+  <div class="card">
+    <div class="bars" id="bars"></div>
+    <p style="margin:16px 0 0"><strong>The catch:</strong> the safety instruction refused every privacy attack, but it still ran the overload attack, because nobody had thought to mention cost in the instruction. The database's own time limit stopped it. Instructions cover what you anticipated. Limits enforced by the database cover the rest.</p>
+  </div>
+
+  <footer>Built from the project's own code: <code>python scripts/build_guardrails_page.py</code>. Each outcome was produced by running the example against the real guardrails on a copy of the synthetic database, for every combination of the four layers.</footer>
+</main>
+
+<script>
+const D = /*DATA*/null;
+
+const LAYERS = [
+  { id: 'parser', name: 'Parser', nick: 'The reader',
+    does: 'Reads the command like a sentence before it runs, and refuses it if the sentence breaks a rule. Then it runs its own cleaned-up rewrite, never the original text.',
+    catches: ['More than one command at once', 'Anything that changes data (DROP, DELETE, UPDATE)', 'Hidden tables and private columns, even disguised (SeLeCt SaLaRy)', 'SELECT * on a table with private columns', 'Endless loops and obvious cross joins', 'Averages over fewer than 5 people: it adds a "groups of 5 or more" filter'],
+    misses: ['A command that is legal but very expensive. It reads words, not meaning', 'Anything it was not written to look for'] },
+  { id: 'readonly', name: 'Read-only', nick: 'The locked door',
+    does: 'Opens the database file read-only, so the database itself refuses to change anything, whatever the command says.',
+    catches: ['DROP, DELETE, UPDATE, INSERT, CREATE, ALTER', 'Nearly every way of changing data'],
+    misses: ['It stops no reading at all: salaries and keys stay fully readable', 'In my tests it still let ATTACH create a new file (SQLite 3.49)'] },
+  { id: 'authorizer', name: 'Authorizer', nick: 'The guard at every shelf',
+    does: 'The database asks permission each time it touches a table, column or function. Private columns and hidden tables are denied, however the command is written or disguised.',
+    catches: ['Disguised requests, because it sees the real column, not the text', 'Hidden and system tables', 'Writes and attaching other files', 'Endless recursion'],
+    misses: ['It does not care how much work a command does', 'On its own it also refuses legitimate salary averages, because only the parser can approve those'] },
+  { id: 'limits', name: 'Limits', nick: 'The stopwatch',
+    does: 'Stops any command that runs longer than one second, and never returns more than 200 rows.',
+    catches: ['Overload attacks: endless loops, huge cross joins, giant data dumps'],
+    misses: ['It knows nothing about privacy or writes. A fast command that steals data passes straight through'] },
+];
+const ORDER = LAYERS.map(l => l.id);
+const NAME = Object.fromEntries(LAYERS.map(l => [l.id, l.name]));
+const state = { sel: D.examples[0].id, on: { parser: true, readonly: true, authorizer: true, limits: true }, info: 'parser', independent: true };
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let timers = [];
+
+function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') n.className = v; else if (k === 'text') n.textContent = v; else if (k.startsWith('on')) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid != null) n.append(kid.nodeType ? kid : document.createTextNode(kid));
+  return n;
+}
+const $ = id => document.getElementById(id);
+const current = () => D.examples.find(e => e.id === state.sel);
+const keyOf = on => ORDER.map(l => on[l] ? '1' : '0').join('');
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const fmt = x => Number(x).toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+function renderPicker() {
+  const p = $('picker'); p.replaceChildren();
+  for (const [kind, label] of [['legit', 'Normal questions'], ['attack', 'Attacks']]) {
+    p.append(el('h3', { text: label }));
+    for (const ex of D.examples.filter(e => e.kind === kind))
+      p.append(el('button', { type: 'button', 'aria-pressed': String(ex.id === state.sel), text: ex.title, onclick: () => { state.sel = ex.id; renderAll(); } }));
+  }
+}
+function renderHeader() {
+  const ex = current();
+  $('ex-title').textContent = ex.title;
+  const tag = $('ex-tag'); tag.textContent = ex.kind === 'legit' ? 'should work' : 'should be stopped'; tag.className = 'tag ' + ex.kind;
+  $('ex-plain').textContent = ex.plain; $('ex-sql').textContent = ex.sql;
+}
+function renderToggles() {
+  const t = $('toggles'); t.replaceChildren();
+  for (const l of LAYERS) {
+    const box = el('input', { type: 'checkbox', onchange: e => { state.on[l.id] = e.target.checked; renderAll(); } }); box.checked = state.on[l.id];
+    t.append(el('label', {}, box, el('span', { text: l.name })));
+  }
+}
+function stationStates(res) {
+  const s = {}; let stopped = false;
+  for (const l of ORDER) {
+    if (!state.on[l]) { s[l] = ['off', 'Off', 'Switched off']; continue; }
+    if (stopped) { s[l] = ['skipped', 'Not reached', 'The command never got this far']; continue; }
+    if (res.stopper === l) { s[l] = ['stop', 'Stopped', res.message || 'Refused']; stopped = true; continue; }
+    s[l] = ['pass', 'Passed', 'Nothing wrong here, so it carries on'];
+  }
+  return [s, stopped];
+}
+function independentStates(ex) {
+  // Each layer judged on its own, as if the others were not there: the answer to "would this layer have caught it?"
+  const s = {};
+  for (const l of ORDER) {
+    if (!state.on[l]) { s[l] = ['off', 'Off', 'Switched off']; continue; }
+    const r = ex.results[keyOf(Object.fromEntries(ORDER.map(x => [x, x === l])))];
+    if (ex.kind === 'legit') s[l] = r.worked ? ['pass', 'Fine', 'Lets a normal question through'] : ['miss', 'Over-blocks', cap(r.message) || 'Wrongly refuses it'];
+    else s[l] = r.harm ? ['miss', 'Misses it', 'On its own, this layer would let it through'] : ['stop', 'Stops it', cap(r.message) || 'Refuses it'];
+  }
+  return s;
+}
+function renderLegend() {
+  const item = (color, text, dashed) => el('span', {}, el('i', { style: `background:${dashed ? 'transparent' : color};border:2px ${dashed ? 'dashed' : 'solid'} ${color}` }), text);
+  const l = $('legend'); l.replaceChildren();
+  if (state.independent) l.append(item('var(--bad)', 'Would stop it'), item('var(--warn)', 'Would miss it (or wrongly block a normal question)'), item('var(--ok)', 'Fine for a normal question'), item('var(--off)', 'Switched off', true));
+  else l.append(item('var(--ok)', 'Passed'), item('var(--bad)', 'Stopped here'), item('var(--off)', 'Not reached, or switched off', true));
+  $('indep-hint').textContent = state.independent
+    ? 'Each layer is judged on its own, as if the others were not there. In real life they run in order, and the first to refuse ends the journey.'
+    : 'Layers run in order. The first one to refuse ends the journey, so the layers after it never get a turn.';
+  $('alone-wrap').hidden = state.independent;
+}
+function renderPipeline() {
+  const ex = current(), res = ex.results[keyOf(state.on)], [seq, stopped] = stationStates(res), st = state.independent ? independentStates(ex) : seq;
+  renderLegend();
+  const box = $('pipeline'); box.replaceChildren(); timers.forEach(clearTimeout); timers = [];
+  const nodes = [];
+  LAYERS.forEach((l, i) => {
+    const [s, badge, text] = st[l.id];
+    const node = el('button', { type: 'button', class: 'station', 'data-s': s, 'aria-current': String(state.info === l.id), onclick: () => { state.info = l.id; renderPipeline(); renderInfo(); } },
+      el('div', { class: 'nm', text: l.name }), el('div', { class: 'nk', text: l.nick }),
+      ['pass', 'stop', 'miss'].includes(s) ? el('span', { class: 'badge', text: badge }) : null, el('div', { class: 'st', text })
+    );
+    box.append(el('div', { class: 'stage' }, node, el('div', { class: 'arrow', text: '→', 'aria-hidden': 'true' }))); nodes.push(node);
+  });
+  let dbState, dbText;
+  if (ex.kind === 'legit') { dbState = res.worked ? 'ok' : (stopped ? 'safe' : 'bad'); dbText = res.worked ? 'Answered' : 'No answer'; }
+  else if (res.harm) { dbState = 'harm'; dbText = 'Harm done'; } else { dbState = 'safe'; dbText = stopped ? 'Never reached' : 'No harm'; }
+  const db = el('div', { class: 'db', 'data-s': dbState }, el('div', { class: 'nm', text: 'Database' }), el('div', { class: 'st', text: dbText }));
+  box.append(db); nodes.push(db);
+  nodes.forEach((n, i) => { if (reduced) n.classList.add('shown'); else timers.push(setTimeout(() => n.classList.add('shown'), 350 * i)); });
+  renderVerdict(res, ex);
+  if (state.independent) {
+    const hits = ORDER.filter(l => st[l][0] === (ex.kind === 'legit' ? 'miss' : 'stop')).map(l => NAME[l]);
+    const on = ORDER.filter(l => state.on[l]).length;
+    const line = ex.kind === 'legit'
+      ? (hits.length ? `On their own, these layers would wrongly block it: ${hits.join(', ')}.` : 'None of the switched-on layers would block it on its own.')
+      : (on ? `${hits.length} of the ${on} switched-on layer${on === 1 ? '' : 's'} would stop this on their own${hits.length ? ': ' + hits.join(', ') : ''}.` : 'Every layer is off.');
+    $('verdict').append(el('div', { class: 'muted', style: 'margin-top:8px;font-size:.9rem', text: line }));
+  }
+}
+function renderVerdict(res, ex) {
+  const v = $('verdict'); v.className = 'verdict'; v.replaceChildren();
+  const name = NAME[res.stopper];
+  if (ex.kind === 'legit') {
+    if (res.worked) { v.classList.add('good'); v.append(el('strong', { text: 'A normal question gets answered.' }), el('span', { text: res.preview ? 'Result: ' + res.preview : '' })); }
+    else { v.classList.add('warnv'); v.append(el('strong', { text: 'A normal question was wrongly blocked' + (name ? ' by the ' + name + ' layer' : '') + '.' }), el('span', { text: res.message || 'That is an over-block: safe, but unhelpful.' })); }
+  } else if (res.harm) {
+    v.classList.add('badv'); v.append(el('strong', { text: 'The attack succeeded.' }), el('span', { text: res.what }));
+  } else {
+    v.classList.add('good'); v.append(el('strong', { text: name ? 'Stopped by the ' + name + ' layer.' : 'No harm done.' }), el('span', { text: cap(res.message || '') }));
+  }
+}
+function renderAlone() {
+  const ex = current(), u = $('alone'); u.replaceChildren();
+  for (const l of LAYERS) {
+    const only = Object.fromEntries(ORDER.map(x => [x, x === l.id])), r = ex.results[keyOf(only)];
+    let good, text;
+    if (ex.kind === 'legit') { good = r.worked; text = l.name + ' alone: ' + (r.worked ? 'lets it through' : 'wrongly blocks it'); }
+    else { good = !r.harm; text = l.name + ' alone: ' + (r.harm ? 'does not stop it' : 'stops it'); }
+    u.append(el('li', { class: good ? 'y' : 'n', text }));
+  }
+}
+function renderInfo() {
+  const l = LAYERS.find(x => x.id === state.info), box = $('info'); box.replaceChildren();
+  box.append(
+    el('div', { style: 'grid-column:1/-1' }, el('h3', { text: l.name + ': ' + l.nick.toLowerCase() }), el('p', { text: l.does, style: 'margin:0' })),
+    el('div', { class: 'catch' }, el('h3', { text: 'Catches' }), el('ul', {}, l.catches.map(c => el('li', { text: c })))),
+    el('div', { class: 'miss' }, el('h3', { text: 'Misses' }), el('ul', {}, l.misses.map(c => el('li', { text: c }))))
+  );
+}
+function renderDiff() {
+  const d = D.diff, audit = $('audit').checked, box = $('steps'); box.replaceChildren();
+  const q1 = `SELECT AVG(salary) FROM employees WHERE role = '${d.role}'`, q2 = q1 + ` AND office <> '${d.office}'`;
+  box.append(
+    el('div', { class: 'card step' }, el('div', { class: 'n', text: 'Question 1' }), el('pre', { text: q1 }), el('div', { class: 'big', text: fmt(d.avg_all) }), el('div', { class: 'muted', text: `Average salary of all ${d.n} ${d.role.toLowerCase()}s. Allowed.` })),
+    audit
+      ? el('div', { class: 'card step blocked' }, el('div', { class: 'n', text: 'Question 2' }), el('pre', { text: q2 }), el('div', { class: 'big', text: 'Refused' }), el('div', { text: cap(d.audit_message) + '.' }))
+      : el('div', { class: 'card step' }, el('div', { class: 'n', text: 'Question 2' }), el('pre', { text: q2 }), el('div', { class: 'big', text: fmt(d.avg_without) }), el('div', { class: 'muted', text: `Average of the other ${d.n - 1}, leaving out ${d.office}. Also allowed: ${d.n - 1} is more than 5.` })),
+    audit
+      ? el('div', { class: 'card step' }, el('div', { class: 'n', text: 'Subtract' }), el('div', { class: 'big', text: 'Not possible' }), el('div', { class: 'muted', text: 'With only the first answer, nothing can be isolated. The salary stays private.' }))
+      : el('div', { class: 'card step leak' }, el('div', { class: 'n', text: 'Subtract' }), el('div', { class: 'big', text: fmt(d.recovered) }), el('div', { class: 'muted', text: `${d.n} × ${fmt(d.avg_all)} − ${d.n - 1} × ${fmt(d.avg_without)} = the salary of the one ${d.role.toLowerCase()} in ${d.office}. The real figure is ${fmt(d.truth)}. Exact.` }))
+  );
+  $('diff-note').textContent = audit ? 'The audit refuses a result that differs from an earlier one by fewer than 5 people. It stops this simple version, not every version: three or more questions can still isolate someone.' : 'Both questions were individually allowed. The minimum group size cannot see this, because it looks at one question at a time.';
+}
+function renderBars() {
+  const b = $('bars'); b.replaceChildren();
+  const names = { 'plain prompt, no guardrails': 'No protection', 'safety prompt only': 'Safety instruction only', 'guardrails only': 'Guardrails only', 'safety prompt + guardrails': 'Instruction and guardrails' };
+  for (const bar of D.bars) {
+    const pct = (bar.harm / bar.total) * 100;
+    b.append(el('div', { class: 'bar' }, el('div', { class: 'row' }, el('strong', { text: names[bar.name] || bar.name }), el('span', { text: `${bar.harm} of ${bar.total} attacks caused harm` })),
+      el('div', { class: 'track' }, el('div', { class: 'fill' + (bar.harm ? '' : ' zero'), style: `width:${pct}%` }))));
+  }
+}
+function renderCoverage() {
+  const box = $('coverage'); box.replaceChildren();
+  for (const r of D.coverage.rows) {
+    const pct = (r.stopped / r.total) * 100, cls = r.stopped === r.total ? ' good' : pct >= 80 ? ' mid' : '';
+    box.append(el('div', { class: 'bar' },
+      el('div', { class: 'row' }, el('strong', { text: r.label }), el('span', { text: `${r.stopped} of ${r.total} attacks stopped` })),
+      el('div', { class: 'track' }, el('div', { class: 'fill' + cls, style: `width:${pct}%` })),
+      r.through.length ? el('div', { class: 'chips', 'aria-label': 'Attacks that get through' }, el('span', { class: 'muted', style: 'font-size:.78rem', text: 'Gets through:' }), r.through.map(n => el('span', { class: 'chip', text: n }))) : null));
+  }
+}
+function renderAll() { renderPicker(); renderHeader(); renderToggles(); renderPipeline(); renderAlone(); renderInfo(); }
+$('audit').addEventListener('change', renderDiff);
+$('indep').addEventListener('change', e => { state.independent = e.target.checked; renderPipeline(); });
+$('n-attacks').textContent = D.attackCount;
+$('n-real').textContent = D.coverage.total;
+document.querySelectorAll('.n-real').forEach(n => n.textContent = D.coverage.total);
+renderAll(); renderCoverage(); renderDiff(); renderBars();
+</script>
+</body>
+</html>

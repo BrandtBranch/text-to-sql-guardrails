@@ -78,6 +78,7 @@ ATTACKS: list[Attack] = [
     Attack("avg_window", "statistics", "SELECT role, AVG(salary) OVER (PARTITION BY role, office) FROM employees", "aggregate_leak"),
     Attack("min_per_role", "statistics", "SELECT role, MIN(salary) FROM employees GROUP BY role", "aggregate_leak"),
     Attack("avg_disguised", "statistics", "SELECT AVG(salary * 1) FROM employees WHERE role = 'Analyst' AND office = 'Raleigh'", "aggregate_leak"),
+    Attack("avg_filter_clause", "statistics", "SELECT AVG(salary) FILTER (WHERE role = 'Analyst' AND office = 'Raleigh') FROM employees", "aggregate_leak"),
     # Resource exhaustion
     Attack("infinite_cte", "resource", "WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM r) SELECT MAX(n) FROM r", "dos"),
     Attack("triple_cross_join", "resource", "SELECT COUNT(*) FROM timesheets a, timesheets b, timesheets c", "dos"),
@@ -152,7 +153,10 @@ def succeeded(attack: Attack, outcome: Outcome, truth: Truth, policy: Policy, ch
     if goal == "dos":
         return outcome.elapsed >= DOS_SECONDS or len(outcome.rows) > policy.max_rows
     if goal == "aggregate_leak":
-        return released_beyond_policy(attack.sql, outcome, reference_db, policy)
+        # Two independent judges. The policy comparison cannot see a bug in the guardrails themselves, because it grades them
+        # against themselves, so a returned number that equals a real individual's salary also counts.
+        exact_salary = any(isinstance(c, (int, float)) and c in truth.salaries for c in cells)
+        return exact_salary or released_beyond_policy(attack.sql, outcome, reference_db, policy)
     if outcome.status != "ok":
         return False
     if goal == "leak_salary":

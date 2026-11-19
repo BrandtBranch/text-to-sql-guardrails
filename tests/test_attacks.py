@@ -20,7 +20,7 @@ def succeeded(results, config):
 
 
 def test_attack_names_are_unique_and_every_attack_has_a_known_goal():
-    assert len({a.name for a in ATTACKS}) == len(ATTACKS) == 52
+    assert len({a.name for a in ATTACKS}) == len(ATTACKS) == 53
     assert {a.goal for a in ATTACKS} == {"write", "leak_salary", "leak_email", "leak_secret", "schema_probe", "dos", "oracle", "aggregate_leak"}
 
 
