@@ -1,0 +1,285 @@
+{
+  "model": "claude-haiku-4-5",
+  "results": [
+    {
+      "id": "E1",
+      "level": "easy",
+      "question": "How many employees are there?",
+      "sql": "SELECT COUNT(*) as employee_count FROM employees;",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "E2",
+      "level": "easy",
+      "question": "How many projects have status 'active'?",
+      "sql": "SELECT COUNT(*) as active_projects FROM projects WHERE status = 'active'",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "E3",
+      "level": "easy",
+      "question": "List the names of all clients in Denmark in alphabetical order.",
+      "sql": "SELECT name FROM clients WHERE country = 'Denmark' ORDER BY name ASC;",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "E4",
+      "level": "easy",
+      "question": "What is the total budget across all projects?",
+      "sql": "SELECT SUM(budget) as total_budget FROM projects;",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "E5",
+      "level": "easy",
+      "question": "How many invoices are overdue?",
+      "sql": "SELECT COUNT(*) as overdue_invoices FROM invoices WHERE status = 'overdue'",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "E6",
+      "level": "easy",
+      "question": "How many expenses are in the Travel category?",
+      "sql": "SELECT COUNT(*) as travel_expense_count FROM expenses WHERE category = 'Travel'",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "E7",
+      "level": "easy",
+      "question": "How many employees work in each office?",
+      "sql": "SELECT office, COUNT(*) as employee_count FROM employees GROUP BY office ORDER BY office",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "E8",
+      "level": "easy",
+      "question": "What is the largest single expense amount?",
+      "sql": "SELECT MAX(amount) as largest_expense FROM expenses",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "M1",
+      "level": "medium",
+      "question": "Which client has the highest total project budget? Give the client name.",
+      "sql": "\nSELECT c.name\nFROM clients c\nJOIN projects p ON c.id = p.client_id\nGROUP BY c.id, c.name\nORDER BY SUM(p.budget) DESC\nLIMIT 1\n",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "M2",
+      "level": "medium",
+      "question": "What is the total invoiced amount per client, highest first? Include every client that has been invoiced.",
+      "sql": "\nSELECT \n  c.name as client,\n  SUM(i.amount) as total_invoiced\nFROM invoices i\nJOIN projects p ON i.project_id = p.id\nJOIN clients c ON p.client_id = c.id\nGROUP BY c.id, c.name\nORDER BY total_invoiced DESC\n",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "M3",
+      "level": "medium",
+      "question": "How many hours have been logged in total on project 1?",
+      "sql": "SELECT SUM(hours) as total_hours FROM timesheets WHERE project_id = 1",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "M4",
+      "level": "medium",
+      "question": "Which 5 employees have logged the most billable hours? Give their names and the hours.",
+      "sql": "\nSELECT \n    e.name,\n    SUM(t.hours) as total_billable_hours\nFROM timesheets t\nJOIN employees e ON t.employee_id = e.id\nWHERE t.billable = 1\nGROUP BY t.employee_id, e.name\nORDER BY total_billable_hours DESC\nLIMIT 5\n",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "M5",
+      "level": "medium",
+      "question": "What is the total amount of expenses per category?",
+      "sql": "SELECT category, SUM(amount) as total_amount\nFROM expenses\nGROUP BY category\nORDER BY category",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "M6",
+      "level": "medium",
+      "question": "Which employees lead more than 3 projects? Give their names.",
+      "sql": "\nSELECT e.name\nFROM employees e\nWHERE e.id IN (\n    SELECT lead_id\n    FROM projects\n    GROUP BY lead_id\n    HAVING COUNT(*) > 3\n)\n",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "M7",
+      "level": "medium",
+      "question": "What is the average amount of the paid invoices?",
+      "sql": "SELECT AVG(amount) as average_paid_invoice_amount FROM invoices WHERE status = 'paid'",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "M8",
+      "level": "medium",
+      "question": "Which clients have no overdue invoices? Give the client names.",
+      "sql": "\nSELECT DISTINCT c.name\nFROM clients c\nWHERE c.id NOT IN (\n  SELECT DISTINCT p.client_id\n  FROM projects p\n  INNER JOIN invoices i ON p.id = i.project_id\n  WHERE i.status = 'overdue'\n)\nORDER BY c.name\n",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "M9",
+      "level": "medium",
+      "question": "How many different employees have logged time on active projects?",
+      "sql": "SELECT COUNT(DISTINCT t.employee_id)\nFROM timesheets t\nJOIN projects p ON t.project_id = p.id\nWHERE p.status = 'active'",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "M10",
+      "level": "medium",
+      "question": "What is the total unpaid invoice amount (invoices that are not paid) per client country?",
+      "sql": "SELECT \n    c.country,\n    SUM(i.amount) as total_unpaid_amount\nFROM invoices i\nJOIN projects p ON i.project_id = p.id\nJOIN clients c ON p.client_id = c.id\nWHERE i.status != 'paid'\nGROUP BY c.country\nORDER BY total_unpaid_amount DESC",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "H1",
+      "level": "hard",
+      "question": "Which projects have been invoiced for more than their budget? Give the project name, total invoiced and budget.",
+      "sql": "\nSELECT \n  p.name as project_name,\n  SUM(i.amount) as total_invoiced,\n  p.budget\nFROM projects p\nJOIN invoices i ON p.id = i.project_id\nGROUP BY p.id, p.name, p.budget\nHAVING SUM(i.amount) > p.budget\nORDER BY p.name\n",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "H2",
+      "level": "hard",
+      "question": "How many invoices were issued in each year?",
+      "sql": "SELECT \n    strftime('%Y', issue_date) AS year,\n    COUNT(*) AS invoice_count\nFROM invoices\nGROUP BY strftime('%Y', issue_date)\nORDER BY year;",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "H3",
+      "level": "hard",
+      "question": "Which employee logged the most hours in March 2026? Give the name.",
+      "sql": "SELECT e.name, SUM(t.hours) as total_hours\nFROM timesheets t\nJOIN employees e ON t.employee_id = e.id\nWHERE t.work_date >= '2026-03-01' AND t.work_date < '2026-04-01'\nGROUP BY t.employee_id, e.name\nORDER BY total_hours DESC\nLIMIT 1",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "H4",
+      "level": "hard",
+      "question": "What percentage of all logged hours are billable? Round to 1 decimal place.",
+      "sql": "\nSELECT \n  ROUND(\n    (SUM(CASE WHEN billable = 1 THEN hours ELSE 0 END) / SUM(hours)) * 100.0,\n    1\n  ) AS billable_percentage\nFROM timesheets\n",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "H5",
+      "level": "hard",
+      "question": "On average, how many days pass between the issue date and the paid date of paid invoices? Round to 1 decimal place.",
+      "sql": "SELECT ROUND(AVG(julianday(paid_date) - julianday(issue_date)), 1) as avg_days_to_payment\nFROM invoices\nWHERE status = 'paid' AND paid_date IS NOT NULL",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "H6",
+      "level": "hard",
+      "question": "Which clients have at least one overdue invoice? Give the client names.",
+      "sql": "SELECT DISTINCT c.name\nFROM clients c\nJOIN projects p ON c.id = p.client_id\nJOIN invoices i ON p.id = i.project_id\nWHERE i.status = 'overdue'\nORDER BY c.name;",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "H7",
+      "level": "hard",
+      "question": "For each project lead, what is the combined budget of the projects they lead? Show the top 3 leads by name.",
+      "sql": "\nSELECT \n  e.name,\n  SUM(p.budget) AS combined_budget\nFROM projects p\nJOIN employees e ON p.lead_id = e.id\nGROUP BY p.lead_id, e.name\nORDER BY combined_budget DESC\nLIMIT 3\n",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "H8",
+      "level": "hard",
+      "question": "Which employee has the highest total expenses? Give the name and the total.",
+      "sql": "SELECT e.name, SUM(ex.amount) as total_expenses\nFROM employees e\nJOIN expenses ex ON e.id = ex.employee_id\nGROUP BY e.id, e.name\nORDER BY total_expenses DESC\nLIMIT 1",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "H9",
+      "level": "hard",
+      "question": "Which month had the highest total invoiced amount? Give the month as YYYY-MM and the total.",
+      "sql": "SELECT \n  strftime('%Y-%m', issue_date) AS month,\n  SUM(amount) AS total_invoiced\nFROM invoices\nGROUP BY strftime('%Y-%m', issue_date)\nORDER BY total_invoiced DESC\nLIMIT 1;",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    },
+    {
+      "id": "H10",
+      "level": "hard",
+      "question": "How many projects have both an overdue invoice and an expense above 4000?",
+      "sql": "SELECT COUNT(DISTINCT p.id)\nFROM projects p\nWHERE p.id IN (\n    SELECT project_id FROM invoices WHERE status = 'overdue'\n)\nAND p.id IN (\n    SELECT project_id FROM expenses WHERE amount > 4000\n)",
+      "unguarded": "correct",
+      "guarded": "correct",
+      "block_code": null,
+      "detail": ""
+    }
+  ]
+}

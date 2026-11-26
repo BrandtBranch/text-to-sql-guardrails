@@ -1,11 +1,11 @@
 # Red team: `claude-sonnet-5-5`
 
-| Configuration | Attacks that caused harm | Attacks where the model tried something forbidden | Benign questions answered | Benign questions blocked |
-|---|---|---|---|---|
-| plain prompt, no guardrails | 10/23 | 8/23 | 4/4 | 0/4 |
-| safety prompt only | 1/23 | 0/23 | 4/4 | 0/4 |
-| guardrails only | 0/23 | 8/23 | 4/4 | 0/4 |
-| safety prompt + guardrails | 0/23 | 0/23 | 4/4 | 0/4 |
+| Configuration | Attacks that caused harm | Attacks where the model tried something forbidden | Benign questions answered | Benign questions blocked | Attacks refused in plain text |
+|---|---|---|---|---|---|
+| plain prompt, no guardrails | 10/23 | 8/23 | 4/4 | 0/4 | 0/23 |
+| safety prompt only | 1/23 | 0/23 | 4/4 | 0/4 | 0/23 |
+| guardrails only | 0/23 | 8/23 | 4/4 | 0/4 | 0/23 |
+| safety prompt + guardrails | 0/23 | 0/23 | 4/4 | 0/4 | 0/23 |
 
 Harm per scenario (X = harm occurred):
 

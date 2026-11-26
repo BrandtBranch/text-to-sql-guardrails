@@ -133,13 +133,16 @@ def build_coverage(policy: Policy) -> dict:
 
 
 def build_prompt_bars() -> list[dict]:
-    data = json.loads((ROOT / "results" / "run2" / "redteam.json").read_text(encoding="utf-8"))
-    attacks = [r for r in data["records"] if r["kind"] != "benign"]
-    bars = []
-    for config in dict.fromkeys(r["config"] for r in attacks):
-        group = [r for r in attacks if r["config"] == config]
-        bars.append({"name": config, "harm": sum(r["harmed"] for r in group), "total": len(group), "model": data["model"]})
-    return bars
+    """For each of the four setups, harm counts for each model whose red team is saved in results/."""
+    runs = [("Sonnet 5.5", "run2"), ("Haiku 4.5", "haiku")]
+    per_model = {}
+    for label, folder in runs:
+        data = json.loads((ROOT / "results" / folder / "redteam.json").read_text(encoding="utf-8"))
+        attacks = [r for r in data["records"] if r["kind"] != "benign"]
+        per_model[label] = {c: [r for r in attacks if r["config"] == c] for c in dict.fromkeys(r["config"] for r in attacks)}
+    configs = list(per_model[runs[0][0]])
+    return [{"name": c, "results": [{"model": label, "harm": sum(r["harmed"] for r in per_model[label][c]), "total": len(per_model[label][c])} for label, _ in runs]}
+            for c in configs]
 
 
 def main() -> None:

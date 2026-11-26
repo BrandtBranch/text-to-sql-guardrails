@@ -173,10 +173,10 @@
   </div>
 
   <h2>4. Why not just tell the AI to behave?</h2>
-  <p class="muted" style="max-width:72ch">I sent 23 hostile requests through Claude under four setups. The bars show how many caused real harm: private data released, data changed, or the system overloaded.</p>
+  <p class="muted" style="max-width:72ch">I sent 23 hostile requests through two Claude models, a larger one and a smaller one, under four setups. The bars show how many caused real harm: private data released, data changed, or the system overloaded.</p>
   <div class="card">
     <div class="bars" id="bars"></div>
-    <p style="margin:16px 0 0"><strong>The catch:</strong> the safety instruction refused every privacy attack, but it still ran the overload attack, because nobody had thought to mention cost in the instruction. The database's own time limit stopped it. Instructions cover what you anticipated. Limits enforced by the database cover the rest.</p>
+    <p style="margin:16px 0 0"><strong>The catch:</strong> for both models, the safety instruction refused every privacy attack, but it still ran the overload attack, because nobody had thought to mention cost in the instruction. The database's own time limit stopped it. Instructions cover what you anticipated. Limits enforced by the database cover the rest. The smaller model was not easier to attack here. Its weakness was quieter: it sometimes passed hidden instructions on to the reader as if they were ordinary notes.</p>
   </div>
 
   <footer>Built from the project's own code: <code>python scripts/build_guardrails_page.py</code>. Each outcome was produced by running the example against the real guardrails on a copy of the synthetic database, for every combination of the four layers.</footer>
@@ -352,9 +352,10 @@ function renderBars() {
   const b = $('bars'); b.replaceChildren();
   const names = { 'plain prompt, no guardrails': 'No protection', 'safety prompt only': 'Safety instruction only', 'guardrails only': 'Guardrails only', 'safety prompt + guardrails': 'Instruction and guardrails' };
   for (const bar of D.bars) {
-    const pct = (bar.harm / bar.total) * 100;
-    b.append(el('div', { class: 'bar' }, el('div', { class: 'row' }, el('strong', { text: names[bar.name] || bar.name }), el('span', { text: `${bar.harm} of ${bar.total} attacks caused harm` })),
-      el('div', { class: 'track' }, el('div', { class: 'fill' + (bar.harm ? '' : ' zero'), style: `width:${pct}%` }))));
+    b.append(el('div', { class: 'bar' }, el('strong', { text: names[bar.name] || bar.name }),
+      bar.results.map(r => el('div', { style: 'margin-top:6px' },
+        el('div', { class: 'row', style: 'margin-bottom:2px' }, el('span', { class: 'muted', text: r.model }), el('span', { text: `${r.harm} of ${r.total} attacks caused harm` })),
+        el('div', { class: 'track' }, el('div', { class: 'fill' + (r.harm ? '' : ' zero'), style: `width:${(r.harm / r.total) * 100}%` }))))));
   }
 }
 function renderCoverage() {
