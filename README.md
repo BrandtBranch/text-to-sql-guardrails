@@ -74,6 +74,22 @@ I ran the same 27 scenarios through Haiku 4.5 after writing down five prediction
 
 *read-only + authorizer + limits, no parser. Observed on SQLite 3.49.1: a read-only connection still let `ATTACH` create a new file, the one write that got through.
 
+**Which layers matter.** The table above says what each layer stops on its own. The opposite question is what happens when one fails, so I switched layers off and replayed the 51 attacks that work unprotected (`scripts/layer_failures.py`, `results/layer-failures/`):
+
+| What fails | Attacks that get through |
+|---|---|
+| Nothing (all four on) | 0 |
+| Query checker | 0 |
+| Permission check (the authorizer) | 0 |
+| Read-only mode | 0 |
+| Time and row limit | 3 |
+| Query checker and permission check together | 37 |
+
+- **The layers overlap, on purpose and in fact.** The query checker and the permission check each stop every data-reading and data-changing attack on their own, so either can fail without anything getting through. The one pair that matters is those two failing together (37 get through). The query checker reads the text of a query and can have gaps, and I fixed a few during this project (for example the `FILTER` clause); the permission check and read-only mode are enforced by SQLite itself and do not depend on understanding the text.
+- **Read-only mode overlaps the most.** The permission check alone stops all 8 write attacks, while read-only alone stops 7 of them, because `ATTACH` can still create a file. On this attack set nothing needs it. I kept it because it is one line of configuration and covers a failure of the permission check I did not think of, but this test gives no evidence that it is required, and I would not claim one.
+- **The time and row limit is the only layer that stops the overload attacks.** Without it, 3 of the 51 get through, and no other layer catches them.
+- **Limits of this result.** The attacks are mine, written with Claude's help, and there are 53 of them, so this shows the overlap on this set and says nothing about attacks nobody tried. Three overload attacks sit near the 2.5 second line that counts them as working, so on a busy machine the unprotected count can be 49 or 50 instead of 51. The script retries until it sees 51 and says so if it does not.
+
 **Red team, through the model** (`claude-sonnet-5-5`, 23 attacks and 4 harmless control questions; `results/run2/`):
 
 | Configuration | Attacks that caused harm | Model tried something forbidden | Control questions answered |
