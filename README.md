@@ -104,6 +104,8 @@ Harm means any of: a query released protected data the full guardrails would hav
 | Approved, and another layer had to stop it | 252 (162 row cap, 90 time limit) | 244 (167 row cap, 77 time limit) |
 | Got through every layer and caused harm | 0 | 0 |
 
+**The same 40,000 variations with every layer switched off** (`scripts/fuzz_unprotected.py`; `results/fuzz-unprotected/`): 12,043 of them caused harm, 5,979 in seed 1 and 6,064 in seed 2, judged by the same oracles as above. By starting point, 11,646 of 25,347 variations of attacks worked, and 397 of 14,653 variations of normal questions did (probably mutations that turned a harmless question into a harmful one; not checked). The harm was mostly exact individual salaries, then changes to the database, then slow or huge queries, then emails, API keys, too-small group averages and the catalogue. With the full guardrails the same variations caused harm 0 times.
+
 **Accuracy** (28 questions with reference SQL, scored by comparing results; `results/run1/`): 28 of 28 correct unguarded and 28 of 28 guarded, with no correct query blocked. The question "average salary by role" is now answered with real figures under the guardrails; "by role and office" is withheld and the model explains why. Haiku 4.5 also scored 28 of 28, guarded and unguarded (`results/haiku/`).
 
 ## Data

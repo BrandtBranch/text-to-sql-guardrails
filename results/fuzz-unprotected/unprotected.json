@@ -1,0 +1,50 @@
+[
+ {
+  "seed": 1,
+  "generated": 20000,
+  "harmful": 5979,
+  "by_seed_kind": {
+   "benign": {
+    "variations": 7407,
+    "harmful": 201
+   },
+   "attack": {
+    "variations": 12593,
+    "harmful": 5778
+   }
+  },
+  "harm_reasons": {
+   "an exact individual salary": 3014,
+   "the database changed": 1480,
+   "a resource attack (slow or huge)": 875,
+   "an email address": 682,
+   "an API key": 322,
+   "the average of a group under 5 people": 208,
+   "the database catalogue": 195
+  }
+ },
+ {
+  "seed": 2,
+  "generated": 20000,
+  "harmful": 6064,
+  "by_seed_kind": {
+   "benign": {
+    "variations": 7246,
+    "harmful": 196
+   },
+   "attack": {
+    "variations": 12754,
+    "harmful": 5868
+   }
+  },
+  "harm_reasons": {
+   "an exact individual salary": 3082,
+   "the database changed": 1530,
+   "a resource attack (slow or huge)": 882,
+   "an email address": 694,
+   "an API key": 319,
+   "the average of a group under 5 people": 200,
+   "the database catalogue": 198
+  }
+ }
+]
